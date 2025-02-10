@@ -1,6 +1,5 @@
 <template>
     <Card>
-        <template #title>Kumar ENT</template>
         <template #subtitle>Login to continue</template>
         <template #content>
             <div class="flex flex-col gap-3">

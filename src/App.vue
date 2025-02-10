@@ -1,11 +1,9 @@
 <template>
-    <div class="my-5 mx-auto container">
-        <Navbar />
-        <main class="m-5">
-            <Login v-if="showLogin" />
-            <RouterView v-else />
-        </main>
-    </div>
+    <Navbar />
+    <main class="m-5">
+        <Login v-if="showLogin" />
+        <RouterView v-else />
+    </main>
 </template>
 
 <script>
