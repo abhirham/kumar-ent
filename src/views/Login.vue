@@ -7,16 +7,31 @@
                     <InputNumber
                         v-model="value2"
                         inputId="withoutgrouping"
+                        v-model:modelValue="phone"
                         :useGrouping="false"
                         fluid
                     />
                     <label for="withoutgrouping">Phone #</label>
                 </FloatLabel>
-                <FloatLabel variant="in">
-                    <Password inputId="password" :feedback="false" fluid />
-                    <label for="password">Password</label>
-                </FloatLabel>
-                <Button fluid label="Continue" />
+                <Button
+                    fluid
+                    :loading="fetchingUserLoader"
+                    label="Continue"
+                    v-if="!user"
+                    @click="findUserName"
+                />
+                <template v-else>
+                    <FloatLabel variant="in">
+                        <Password
+                            inputId="password"
+                            v-model="password"
+                            :feedback="false"
+                            fluid
+                        />
+                        <label for="password">Password</label>
+                    </FloatLabel>
+                    <Button fluid label="Continue" @click="login" />
+                </template>
             </div>
         </template>
     </Card>
@@ -25,7 +40,47 @@
 <script>
 export default {
     data() {
-        return {};
+        return {
+            phone: "",
+            password: "",
+            user: null,
+            fetchingUserLoader: false,
+            logInLoader: false,
+        };
+    },
+    methods: {
+        findUserName() {
+            this.fetchingUserLoader = true;
+            this.$store
+                .dispatch("userModule/fetchUserById", { uid: this.phone })
+                .then((res) => {
+                    this.user = res;
+                })
+                .finally((res) => (this.fetchingUserLoader = false));
+        },
+        login() {
+            if (!this.user.passwordSet) {
+                this.singUp();
+                return;
+            }
+
+            this.logInLoader = true;
+            this.$store
+                .dispatch("authModule/signInWithEmailAndPassword", {
+                    phone: this.phone,
+                    password: this.password,
+                })
+                .finally((res) => (this.logInLoader = false));
+        },
+        singUp() {
+            this.logInLoader = true;
+            this.$store
+                .dispatch("authModule/signupWithEmailAndPW", {
+                    phone: this.phone,
+                    password: this.password,
+                })
+                .finally((res) => (this.logInLoader = false));
+        },
     },
 };
 </script>
