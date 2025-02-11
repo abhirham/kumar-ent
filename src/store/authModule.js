@@ -1,12 +1,11 @@
 import firebase, { auth } from "@/libs/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { emailAppend } from "@/constants";
 
 const erroCodeToMessageObj = {
     "auth/email-already-in-use": "Email is already in use. Please Login",
     "auth/invalid-credential": "",
 };
-
-let emailAppend = "@ke.com";
 
 export default {
     name: "authModule",

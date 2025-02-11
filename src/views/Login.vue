@@ -30,7 +30,12 @@
                         />
                         <label for="password">Password</label>
                     </FloatLabel>
-                    <Button fluid label="Continue" @click="login" />
+                    <Button
+                        fluid
+                        label="Continue"
+                        :loading="logInLoader"
+                        @click="login"
+                    />
                 </template>
             </div>
         </template>

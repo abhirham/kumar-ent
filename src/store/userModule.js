@@ -27,11 +27,7 @@ export default {
         updateUserToDB(ctx, { uid, ...payload }) {
             payload.updatedAt = serverTimestamp();
 
-            return db
-                .collection("users")
-                .doc(uid)
-                .update(payload)
-                .then((res) => payload);
+            return db.collection("users").doc(`${uid}`).update(payload);
         },
         fetchUserById({ commit }, { uid }) {
             return db

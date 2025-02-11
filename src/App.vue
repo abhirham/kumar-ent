@@ -1,33 +1,43 @@
 <template>
     <Navbar />
     <main class="m-5">
-        <Login v-if="showLogin" />
-        <RouterView v-else />
+        <RouterView v-if="user.uid" />
+        <Login v-else />
     </main>
 </template>
 
 <script>
 import { RouterView } from "vue-router";
+import { emailAppend } from "@/constants";
 import Navbar from "./components/Navbar.vue";
 import "./assets/main.css";
 import { auth } from "@/libs/firebase";
 import Login from "./views/Login.vue";
 
 export default {
-    components: { Login },
+    components: { Login, Navbar },
     data() {
         return {
             showLogin: true,
         };
     },
+    computed: {
+        user() {
+            return this.$store.state.userModule.user;
+        },
+    },
     mounted() {
         auth.onAuthStateChanged((user) => {
             if (user) {
-                this.showLogin = false;
-                console.log("user logged in");
+                this.$store
+                    .dispatch("userModule/fetchUserById", {
+                        uid: user.email.replace(emailAppend, ""),
+                    })
+                    .then((res) => {
+                        this.$store.commit("userModule/setUser", res);
+                    });
             } else {
-                this.showLogin = true;
-                console.log("user not logged in");
+                this.$store.commit("userModule/setUser", {});
             }
         });
     },
