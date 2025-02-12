@@ -40,10 +40,6 @@ export default {
                     } else {
                         throw { message: "User not found." };
                     }
-                })
-                .catch((e) => {
-                    console.log(e);
-                    throw e.message;
                 });
         },
         updateCourseProgress({ commit, state, dispatch }, { dataToUpdate }) {

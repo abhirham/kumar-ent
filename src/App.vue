@@ -1,4 +1,5 @@
 <template>
+    <Alerts />
     <Navbar />
     <main class="m-5">
         <RouterView v-if="user.uid" />
@@ -10,12 +11,13 @@
 import { RouterView } from "vue-router";
 import { emailAppend } from "@/constants";
 import Navbar from "./components/Navbar.vue";
+import Alerts from "./components/Alerts.vue";
 import "./assets/main.css";
 import { auth } from "@/libs/firebase";
 import Login from "./views/Login.vue";
 
 export default {
-    components: { Login, Navbar },
+    components: { Login, Navbar, Alerts },
     data() {
         return {
             showLogin: true,

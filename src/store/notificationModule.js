@@ -1,14 +1,15 @@
 export default {
-    name: 'notificationModule',
+    name: "notificationModule",
     namespaced: true,
     state() {
         return {
-            alertMessage: '',
+            alertMessage: "",
             error: false,
         };
     },
     mutations: {
         setAlert(state, { alertMessage, error = false }) {
+            console.log({ alertMessage });
             state.alertMessage = alertMessage;
             state.error = error;
         },
