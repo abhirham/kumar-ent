@@ -2,8 +2,10 @@
     <Alerts />
     <Navbar />
     <main class="m-5">
-        <RouterView v-if="user.uid" />
-        <Login v-else />
+        <div class="container mx-auto px-4">
+            <RouterView v-if="user.uid" />
+            <Login v-else />
+        </div>
     </main>
 </template>
 
@@ -15,6 +17,7 @@ import Alerts from "./components/Alerts.vue";
 import "./assets/main.css";
 import { auth } from "@/libs/firebase";
 import Login from "./views/Login.vue";
+import "primeicons/primeicons.css";
 
 export default {
     components: { Login, Navbar, Alerts },
