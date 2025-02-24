@@ -12,7 +12,7 @@ const router = createRouter({
         {
             path: "/admin",
             name: "admin",
-            component: () => import("../views/AdminView.vue"),
+            component: () => import("../views/Admin/index.vue"),
             beforeEnter(to, from, next) {
                 if (store.state.userModule.user.isAdmin) {
                     return next();

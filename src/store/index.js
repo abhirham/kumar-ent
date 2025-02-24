@@ -2,10 +2,11 @@ import { createStore } from "vuex";
 import notificationModule from "./notificationModule";
 import userModule from "./userModule";
 import authModule from "./authModule";
+import machineModule from "./machineModule";
 
 // Create a new store instance.
 const store = createStore({
-    modules: { notificationModule, userModule, authModule },
+    modules: { notificationModule, userModule, authModule, machineModule },
     actions: {},
 });
 

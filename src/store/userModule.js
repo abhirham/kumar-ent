@@ -20,7 +20,7 @@ export default {
                 .collection("users")
                 .doc(payload.uid)
                 .set(
-                    { payload, createdAt: serverTimestamp() },
+                    { ...payload, createdAt: serverTimestamp() },
                     { merge: true }
                 );
         },
@@ -28,6 +28,18 @@ export default {
             payload.updatedAt = serverTimestamp();
 
             return db.collection("users").doc(`${uid}`).update(payload);
+        },
+        fetchUsersFromDB() {
+            return db
+                .collection("users")
+                .get()
+                .then((res) => {
+                    let arr = [];
+
+                    res.forEach((x) => arr.push(x.data()));
+
+                    return arr;
+                });
         },
         fetchUserById({ commit }, { uid }) {
             return db
@@ -40,15 +52,6 @@ export default {
                     } else {
                         throw { message: "User not found." };
                     }
-                });
-        },
-        updateCourseProgress({ commit, state, dispatch }, { dataToUpdate }) {
-            return db
-                .collection("users")
-                .doc(state.user.uid)
-                .update({ purchasedCourses: dataToUpdate })
-                .then((res) => {
-                    commit("updateUser", { purchasedCourses: dataToUpdate });
                 });
         },
     },

@@ -3,7 +3,11 @@
         <template #start> Kumar ENT </template>
         <template #end>
             <div class="flex items-center gap-2">
-                <Button @click="logout" label="Log out"></Button>
+                <Button
+                    v-if="user.uid"
+                    @click="logout"
+                    label="Log out"
+                ></Button>
             </div>
         </template>
     </Menubar>
