@@ -1,22 +1,28 @@
-import { db, serverTimestamp } from "@/libs/firebase";
+import { db, serverTimestamp, arrayUnion } from "@/libs/firebase";
 
 export default {
     name: "machineModule",
     namespaced: true,
     actions: {
+        addProductsToDB({}, payload) {
+            return db
+                .collection("products")
+                .doc("products")
+                .update({ products: arrayUnion(...payload) });
+        },
         createMachineToDB({ commit }, payload) {
             return db
                 .collection("machines")
-                .doc(payload.uid)
+                .doc(payload.id)
                 .set(
                     { ...payload, createdAt: serverTimestamp() },
                     { merge: true }
                 );
         },
-        updateMachineToDB(ctx, { uid, ...payload }) {
+        updateMachineToDB(ctx, { id, ...payload }) {
             payload.updatedAt = serverTimestamp();
 
-            return db.collection("machines").doc(`${uid}`).update(payload);
+            return db.collection("machines").doc(`${id}`).update(payload);
         },
         fetchMachinesFromDB() {
             return db

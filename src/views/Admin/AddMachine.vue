@@ -16,7 +16,7 @@
             class="mb-2"
             >{{ error }}</Message
         >
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-3 mb-5">
             <FloatLabel variant="in">
                 <InputText
                     fluid
@@ -28,13 +28,43 @@
                 />
                 <label for="machineid">Machine #</label>
             </FloatLabel>
-            <CustomAutoComplete
-                v-for="(_, idx) in machine.products"
-                v-model="machine.products[idx]"
-                dropdown
-                fluid
-                variant="filled"
-            />
+            <FloatLabel variant="in">
+                <InputText
+                    fluid
+                    id="machineLoc"
+                    v-model="machine.location"
+                    variant="filled"
+                />
+                <label for="machineLoc">Location</label>
+            </FloatLabel>
+            <div
+                class="flex gap-3 grow"
+                v-for="(p, idx) in machine.products"
+                :key="p.key"
+            >
+                <CustomAutoComplete
+                    v-model="machine.products[idx].name"
+                    fluid
+                    variant="filled"
+                />
+                <Button
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    @click="
+                        machine.products = machine.products.filter(
+                            (x) => x.key !== p.key
+                        )
+                    "
+                    variant="text"
+                />
+            </div>
+            <Button
+                type="button"
+                icon="pi pi-plus"
+                severity="primary"
+                @click="addProduct"
+            ></Button>
         </div>
 
         <div class="flex justify-end gap-2">
@@ -69,7 +99,8 @@ function initialValues() {
     return JSON.parse(
         JSON.stringify({
             id: "",
-            products: [""],
+            location: "",
+            products: [{ key: Date.now(), name: "" }],
         })
     );
 }
@@ -86,6 +117,9 @@ export default {
                 this.$emit("update:modelValue", val);
             },
         },
+        productsToAdd() {
+            return this.machine.products.map((x) => x.name);
+        },
     },
     data() {
         return {
@@ -95,12 +129,19 @@ export default {
         };
     },
     methods: {
+        addProduct() {
+            this.machine.products = [
+                ...this.machine.products,
+                { key: Date.now(), name: "" },
+            ];
+        },
         validate() {
             let arr = [];
-            let { id, products } = this.machine;
+            let { id, products, location } = this.machine;
 
             if (id.length === 0) arr.push("Enter a valid machine#.");
-            if (products.filter((x) => !!x).length === 0)
+            if (location.length === 0) arr.push("Location cannot be empty.");
+            if (products.filter((x) => !!x.name).length === 0)
                 arr.push("Products cannot be empty.");
 
             this.errors = arr;
@@ -116,8 +157,16 @@ export default {
 
             this.loading = true;
 
-            this.$store
-                .dispatch("machineModule/createMachineToDB", this.machine)
+            Promise.all([
+                this.$store.dispatch("machineModule/createMachineToDB", {
+                    ...this.machine,
+                    products: this.productsToAdd,
+                }),
+                this.$store.dispatch(
+                    "machineModule/addProductsToDB",
+                    this.productsToAdd
+                ),
+            ])
                 .then((res) => {
                     this.dialog = false;
                     this.$emit("complete");
@@ -130,7 +179,10 @@ export default {
             this.loading = true;
 
             this.$store
-                .dispatch("machineModule/updateMachineToDB", this.machine)
+                .dispatch("machineModule/updateMachineToDB", {
+                    ...this.machine,
+                    products: this.productsToAdd,
+                })
                 .then((res) => {
                     this.dialog = false;
                     this.$emit("editComplete");
@@ -150,6 +202,11 @@ export default {
                 Object.keys(obj).forEach(
                     (x) => (obj[x] = this.machineToEdit[x])
                 );
+
+                obj.products = obj.products.map((x, idx) => ({
+                    key: idx,
+                    name: x,
+                }));
 
                 this.machine = JSON.parse(JSON.stringify(obj));
             }

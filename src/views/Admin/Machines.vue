@@ -16,6 +16,9 @@
                 :field="col.field"
                 :header="col.header"
             >
+                <template v-if="col.field === 'products'" #body="{ data }">
+                    {{ data.products.join(" , ") }}
+                </template>
                 <template v-if="col.field === 'actions'" #body="{ data }">
                     <Button
                         icon="pi pi-user-edit"
@@ -51,6 +54,7 @@ export default {
             machines: [],
             columns: [
                 { field: "id", header: "Machine #" },
+                { field: "location", header: "Location" },
                 { field: "products", header: "Products" },
                 { field: "actions", header: "" },
             ],
