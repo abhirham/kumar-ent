@@ -3,12 +3,38 @@ import { db, serverTimestamp, arrayUnion } from "@/libs/firebase";
 export default {
     name: "machineModule",
     namespaced: true,
+    state: {
+        products: [],
+    },
+    mutations: {
+        addProducts(state, payload) {
+            state.products = Object.keys(
+                state.products
+                    .concat(payload)
+                    .reduce((acc, x) => ({ ...acc, [x]: 1 }), {})
+            );
+        },
+    },
     actions: {
-        addProductsToDB({}, payload) {
+        addProductsToDB({ commit }, payload) {
             return db
                 .collection("products")
                 .doc("products")
-                .update({ products: arrayUnion(...payload) });
+                .update({ products: arrayUnion(...payload) })
+                .then((res) => commit("addProducts", payload));
+        },
+        fetchProducts({ commit }) {
+            return db
+                .collection("products")
+                .doc("products")
+                .get()
+                .then((res) => {
+                    let arr = res.data().products;
+
+                    commit("addProducts", arr);
+
+                    return arr;
+                });
         },
         createMachineToDB({ commit }, payload) {
             return db

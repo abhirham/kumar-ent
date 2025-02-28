@@ -1,44 +1,59 @@
 <template>
     <div class="grid grid-cols-1 gap-5">
         <FloatLabel variant="in">
-            <AutoComplete
-                v-model="value2"
+            <CustomAutoComplete
+                v-model="machine"
                 inputId="in_label"
                 dropdown
+                optionLabel="id"
+                forceSelection
+                :items="machines"
+                @change="onChange"
                 fluid
-                :suggestions="suggestions"
-                @complete="search"
                 variant="filled"
             />
             <label for="in_label">Machine #</label>
         </FloatLabel>
-        <FloatLabel variant="in">
-            <InputNumber
-                v-model="value2"
-                inputId="withoutgrouping"
-                :useGrouping="false"
-                fluid
-            />
-            <label for="withoutgrouping">Tea</label>
-        </FloatLabel>
+        <template v-if="!!machine">
+            <FloatLabel
+                variant="in"
+                v-for="(p, idx) in machine.products"
+                :key="p"
+            >
+                <InputNumber
+                    v-model="readings[idx]"
+                    inputId="withoutgrouping"
+                    :useGrouping="false"
+                    fluid
+                />
+                <label for="withoutgrouping">{{ p }}</label>
+            </FloatLabel>
+        </template>
         <Button label="Save" />
     </div>
 </template>
 
 <script>
+import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
 export default {
+    components: { CustomAutoComplete },
     data() {
         return {
-            items: [1234, 1345, 1456, 1567],
-            value2: null,
-            suggestions: [],
+            machine: null,
+            readings: [],
+            machines: [],
         };
     },
-    methods: {
-        search(e) {
-            this.suggestions = this.items.filter((x) =>
-                e.query ? `${x}`.includes(e.query) : true
-            );
+    mounted() {
+        this.$store
+            .dispatch("machineModule/fetchMachinesFromDB")
+            .then((res) => {
+                this.machines = res;
+            });
+    },
+    watch: {
+        machine(val) {
+            if (val === null) this.readings = [];
         },
     },
 };

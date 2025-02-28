@@ -46,6 +46,7 @@
                     v-model="machine.products[idx].name"
                     fluid
                     variant="filled"
+                    :items="productsInDB"
                 />
                 <Button
                     type="button"
@@ -119,6 +120,9 @@ export default {
         },
         productsToAdd() {
             return this.machine.products.map((x) => x.name);
+        },
+        productsInDB() {
+            return this.$store.state.machineModule.products;
         },
     },
     data() {

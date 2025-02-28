@@ -43,6 +43,9 @@ export default {
             ],
         };
     },
+    mounted() {
+        this.$store.dispatch("machineModule/fetchProducts");
+    },
 };
 </script>
 

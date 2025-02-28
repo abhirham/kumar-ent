@@ -1,10 +1,15 @@
 <template>
-    <AutoComplete v-model="value" :suggestions="suggestions" />
+    <AutoComplete
+        v-model="value"
+        :suggestions="suggestions"
+        :optionLabel="optionLabel"
+        @complete="search"
+    />
 </template>
 
 <script>
 export default {
-    props: ["modelValue", "items"],
+    props: ["modelValue", "items", "optionLabel"],
     computed: {
         value: {
             get() {
@@ -23,9 +28,13 @@ export default {
 
     methods: {
         search(e) {
-            this.suggestions = this.items.filter((x) =>
-                e.query ? `${x}`.includes(e.query) : true
-            );
+            this.suggestions = this.items.filter((x) => {
+                let val = this.optionLabel ? x[this.optionLabel] : x;
+
+                return e.query
+                    ? `${val.toUpperCase()}`.includes(e.query.toUpperCase())
+                    : true;
+            });
         },
     },
 };
