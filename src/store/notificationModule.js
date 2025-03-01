@@ -9,7 +9,6 @@ export default {
     },
     mutations: {
         setAlert(state, { alertMessage, error = false }) {
-            console.log({ alertMessage });
             state.alertMessage = alertMessage;
             state.error = error;
         },

@@ -16,14 +16,17 @@
         </aside>
         <Users v-if="active === 'Users'" />
         <Machines v-if="active === 'Machines'" />
+        <Readings v-if="active === 'Readings'" />
     </div>
 </template>
 
 <script>
 import Users from "@/views/Admin/Users.vue";
 import Machines from "./Machines.vue";
+import Readings from "./Readings.vue";
+
 export default {
-    components: { Users, Machines },
+    components: { Users, Machines, Readings },
     data() {
         return {
             active: "Users",
@@ -37,7 +40,7 @@ export default {
                     icon: "pi-shop",
                 },
                 {
-                    label: "Products",
+                    label: "Readings",
                     icon: "pi-warehouse",
                 },
             ],

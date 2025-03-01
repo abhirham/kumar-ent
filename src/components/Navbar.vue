@@ -31,7 +31,7 @@ export default {
                     },
                 },
                 {
-                    label: "Dashboard",
+                    label: "Admin",
                     command: () => {
                         this.$router.push({ name: "admin" });
                     },

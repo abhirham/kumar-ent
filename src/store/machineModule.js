@@ -23,6 +23,28 @@ export default {
                 .update({ products: arrayUnion(...payload) })
                 .then((res) => commit("addProducts", payload));
         },
+        addReadings({ rootState }, payload) {
+            let ref = db.collection("readings").doc();
+
+            payload.id = ref.id;
+            payload.createdAt = serverTimestamp();
+            payload.createdBy = rootState.userModule.user.uid;
+
+            return ref.set(payload);
+        },
+        fetchReadings() {
+            return db
+                .collection("readings")
+                .orderBy("createdAt")
+                .get()
+                .then((res) => {
+                    let arr = [];
+
+                    res.forEach((x) => arr.push(x.data()));
+
+                    return arr;
+                });
+        },
         fetchProducts({ commit }) {
             return db
                 .collection("products")
