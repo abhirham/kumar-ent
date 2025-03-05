@@ -42,12 +42,28 @@
                 v-for="(p, idx) in machine.products"
                 :key="p.key"
             >
-                <CustomAutoComplete
-                    v-model="machine.products[idx].name"
-                    fluid
-                    variant="filled"
-                    :items="productsInDB"
-                />
+                <FloatLabel variant="in">
+                    <CustomAutoComplete
+                        v-model="machine.products[idx].name"
+                        fluid
+                        optionLabel="name"
+                        :id="`product${idx}`"
+                        variant="filled"
+                        :items="productsInDB"
+                        @item-select="(e) => onProductSelect(e.value, idx)"
+                    />
+                    <label :for="`product${idx}`">Product Name</label>
+                </FloatLabel>
+                <FloatLabel variant="in">
+                    <Select
+                        v-model="machine.products[idx].type"
+                        :options="types"
+                        id="productType"
+                        class="w-35"
+                    />
+                    <label for="productType">Product Type</label>
+                </FloatLabel>
+
                 <Button
                     type="button"
                     icon="pi pi-trash"
@@ -101,7 +117,7 @@ function initialValues() {
         JSON.stringify({
             id: "",
             location: "",
-            products: [{ key: Date.now(), name: "" }],
+            products: [{ key: Date.now(), name: "", type: "Stocks" }],
         })
     );
 }
@@ -119,7 +135,10 @@ export default {
             },
         },
         productsToAdd() {
-            return this.machine.products.map((x) => x.name);
+            return this.machine.products.map(({ name, type }) => ({
+                name,
+                type,
+            }));
         },
         productsInDB() {
             return this.$store.state.machineModule.products;
@@ -129,14 +148,18 @@ export default {
         return {
             machine: initialValues(),
             errors: [],
+            types: ["Stocks", "Readings"],
             loading: false,
         };
     },
     methods: {
+        onProductSelect(val, idx) {
+            this.machine.products[idx].type = val.type;
+        },
         addProduct() {
             this.machine.products = [
                 ...this.machine.products,
-                { key: Date.now(), name: "" },
+                { key: Date.now(), name: "", type: "Stocks" },
             ];
         },
         validate() {
@@ -181,12 +204,16 @@ export default {
             if (!this.validate()) return;
 
             this.loading = true;
-
-            this.$store
-                .dispatch("machineModule/updateMachineToDB", {
+            Promise.all([
+                this.$store.dispatch("machineModule/updateMachineToDB", {
                     ...this.machine,
                     products: this.productsToAdd,
-                })
+                }),
+                this.$store.dispatch(
+                    "machineModule/addProductsToDB",
+                    this.productsToAdd
+                ),
+            ])
                 .then((res) => {
                     this.dialog = false;
                     this.$emit("editComplete");
@@ -209,7 +236,7 @@ export default {
 
                 obj.products = obj.products.map((x, idx) => ({
                     key: idx,
-                    name: x,
+                    ...x,
                 }));
 
                 this.machine = JSON.parse(JSON.stringify(obj));

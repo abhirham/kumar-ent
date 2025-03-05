@@ -8,10 +8,10 @@ export default {
     },
     mutations: {
         addProducts(state, payload) {
-            state.products = Object.keys(
+            state.products = Object.values(
                 state.products
                     .concat(payload)
-                    .reduce((acc, x) => ({ ...acc, [x]: 1 }), {})
+                    .reduce((acc, x) => ({ ...acc, [x.name]: x }), {})
             );
         },
     },
@@ -20,7 +20,7 @@ export default {
             return db
                 .collection("products")
                 .doc("products")
-                .update({ products: arrayUnion(...payload) })
+                .set({ products: arrayUnion(...payload) }, { merge: true })
                 .then((res) => commit("addProducts", payload));
         },
         addReadings({ rootState }, payload) {
@@ -51,6 +51,8 @@ export default {
                 .doc("products")
                 .get()
                 .then((res) => {
+                    if (!res.exists) return [];
+
                     let arr = res.data().products;
 
                     commit("addProducts", arr);

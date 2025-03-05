@@ -17,7 +17,9 @@
                 :header="col.header"
             >
                 <template v-if="col.field === 'products'" #body="{ data }">
-                    {{ data.products.join(" , ") }}
+                    <span>{{
+                        data.products.map((x) => x.name).join(", ")
+                    }}</span>
                 </template>
                 <template v-if="col.field === 'actions'" #body="{ data }">
                     <Button

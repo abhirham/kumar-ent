@@ -15,15 +15,22 @@
             <label for="in_label">Machine #</label>
         </FloatLabel>
         <template v-if="!!machine">
-            <FloatLabel variant="in" v-for="p in machine.products" :key="p">
-                <InputNumber
-                    v-model="readings[p]"
-                    inputId="withoutgrouping"
-                    :useGrouping="false"
-                    fluid
-                />
-                <label for="withoutgrouping">{{ p }}</label>
-            </FloatLabel>
+            <div
+                class="flex gap-10 items-center"
+                v-for="p in machine.products"
+                :key="p.name"
+            >
+                <div>{{ p.name }}</div>
+                <FloatLabel class="flex-1" variant="in">
+                    <InputNumber
+                        v-model="readings[p]"
+                        inputId="withoutgrouping"
+                        :useGrouping="false"
+                        fluid
+                    />
+                    <label for="withoutgrouping">{{ p }}</label>
+                </FloatLabel>
+            </div>
         </template>
         <Button label="Save" :loading="loading" @click="save" />
     </div>
