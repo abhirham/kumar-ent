@@ -7,7 +7,14 @@ import machineModule from "./machineModule";
 // Create a new store instance.
 const store = createStore({
     modules: { notificationModule, userModule, authModule, machineModule },
-    actions: {},
+    state: {
+        fullScreenLoader: true,
+    },
+    mutations: {
+        setFullScreenLoader(state, payload) {
+            state.fullScreenLoader = payload;
+        },
+    },
 });
 
 store.subscribeAction({

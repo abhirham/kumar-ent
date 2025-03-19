@@ -1,6 +1,7 @@
 <template>
     <Alerts />
     <Navbar />
+    <FullScreenLoader />
     <main class="m-5">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <RouterView v-if="user.uid" />
@@ -14,13 +15,14 @@ import { RouterView } from "vue-router";
 import { emailAppend } from "@/constants";
 import Navbar from "./components/Navbar.vue";
 import Alerts from "./components/Alerts.vue";
+import FullScreenLoader from "./components/FullScreenLoader.vue";
 import "./assets/main.css";
 import { auth } from "@/libs/firebase";
 import Login from "./views/Login.vue";
 import "primeicons/primeicons.css";
 
 export default {
-    components: { Login, Navbar, Alerts },
+    components: { Login, Navbar, Alerts, FullScreenLoader },
     data() {
         return {
             showLogin: true,
@@ -32,9 +34,10 @@ export default {
         },
     },
     mounted() {
-        auth.onAuthStateChanged((user) => {
+        this.$store.commit("setFullScreenLoader", true);
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                this.$store
+                await this.$store
                     .dispatch("userModule/fetchUserById", {
                         uid: user.email.replace(emailAppend, ""),
                     })
@@ -44,6 +47,8 @@ export default {
             } else {
                 this.$store.commit("userModule/setUser", {});
             }
+
+            this.$store.commit("setFullScreenLoader", false);
         });
     },
 };
