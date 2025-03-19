@@ -24,13 +24,16 @@
                 <label for="in_label">Machine #</label>
             </FloatLabel>
             <Button
+                type="button"
                 :disabled="machineID === null"
                 :loading="loading"
                 @click="fetchReadings"
-                >Generate</Button
-            >
+                label="Generate"
+            ></Button>
         </div>
-        <Accordion v-model:value="accordionValue">
+        <template v-if="readings === null"></template>
+        <div v-else-if="readings.length === 0">No readings found.</div>
+        <Accordion v-else v-model:value="accordionValue">
             <AccordionPanel v-for="(reading, idx) in readings" :value="idx">
                 <AccordionHeader>
                     <div class="flex gap-10">
@@ -41,7 +44,6 @@
                 <AccordionContent>
                     <DataTable
                         :value="Object.values(reading.readings)"
-                        :loading="loading"
                         tableStyle="min-width: 50rem"
                     >
                         <Column
@@ -65,8 +67,8 @@ export default {
     data() {
         return {
             accordionValue: 0,
-            loading: true,
-            readings: [],
+            loading: false,
+            readings: null,
             readingDate: new Date(),
             maxDate: new Date(),
             machineID: null,
@@ -89,6 +91,7 @@ export default {
             return moment(date).format("h:mm a");
         },
         fetchReadings() {
+            this.readings = null;
             this.loading = true;
 
             this.$store
