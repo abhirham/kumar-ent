@@ -1,11 +1,10 @@
 <template>
-    <Card>
+    <Card class="w-md mx-auto max-w-full">
         <template #subtitle>Login to continue</template>
         <template #content>
             <div class="flex flex-col gap-3">
                 <FloatLabel variant="in">
-                    <InputNumber
-                        v-model="value2"
+                    <InputText
                         inputId="withoutgrouping"
                         v-model:modelValue="phone"
                         :useGrouping="false"

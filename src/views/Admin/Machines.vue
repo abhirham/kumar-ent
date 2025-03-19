@@ -53,7 +53,6 @@ export default {
             showAddMachine: false,
             showEditMachine: false,
             machineToEdit: null,
-            machines: [],
             columns: [
                 { field: "id", header: "Machine #" },
                 { field: "location", header: "Location" },
@@ -63,22 +62,15 @@ export default {
             loading: false,
         };
     },
-    mounted() {
-        this.getMachines();
+    computed: {
+        machines() {
+            return this.$store.state.machineModule.machines;
+        },
     },
     methods: {
         onEdit(val) {
             this.machineToEdit = val;
             this.showEditMachine = true;
-        },
-        getMachines() {
-            this.loading = true;
-            this.$store
-                .dispatch("machineModule/fetchMachinesFromDB")
-                .then((res) => {
-                    this.machines = res;
-                })
-                .finally(() => (this.loading = false));
         },
         onEditComplete() {
             this.machineToEdit = null;

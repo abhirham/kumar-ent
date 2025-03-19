@@ -2,7 +2,7 @@
     <Alerts />
     <Navbar />
     <main class="m-5">
-        <div class="container mx-auto px-4">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <RouterView v-if="user.uid" />
             <Login v-else />
         </div>

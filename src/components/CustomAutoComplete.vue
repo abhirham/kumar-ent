@@ -9,14 +9,17 @@
 
 <script>
 export default {
-    props: ["modelValue", "items", "optionLabel"],
+    props: ["modelValue", "items", "optionLabel", "optionValue"],
     computed: {
         value: {
             get() {
                 return this.modelValue;
             },
             set(val) {
-                this.$emit("update:modelValue", val);
+                this.$emit(
+                    "update:modelValue",
+                    this.optionValue ? val[this.optionValue] : val
+                );
             },
         },
     },

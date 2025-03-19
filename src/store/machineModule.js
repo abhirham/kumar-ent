@@ -1,10 +1,12 @@
 import { db, serverTimestamp, arrayUnion } from "@/libs/firebase";
+import moment from "moment";
 
 export default {
     name: "machineModule",
     namespaced: true,
     state: {
         products: [],
+        machines: [],
     },
     mutations: {
         addProducts(state, payload) {
@@ -13,6 +15,9 @@ export default {
                     .concat(payload)
                     .reduce((acc, x) => ({ ...acc, [x.name]: x }), {})
             );
+        },
+        setMachines(state, payload) {
+            state.machines = payload;
         },
     },
     actions: {
@@ -30,19 +35,41 @@ export default {
             payload.createdAt = serverTimestamp();
             payload.createdBy = rootState.userModule.user.uid;
 
-            return ref.set(payload);
+            return ref.set(payload).then((res) => {
+                payload.createdAt = moment();
+                return payload;
+            });
         },
-        fetchReadings() {
+        fetchReadings(_, { date, machineId }) {
+            const startOfDay = moment(date).startOf("day").toDate();
+            const endOfDay = moment(date).endOf("day").toDate();
+
             return db
                 .collection("readings")
-                .orderBy("createdAt")
+                .orderBy("createdAt", "desc")
+                .where("createdAt", ">=", startOfDay)
+                .where("createdAt", "<", endOfDay)
+                .where("machineId", "==", machineId)
                 .get()
                 .then((res) => {
+                    console.log(res);
                     let arr = [];
 
                     res.forEach((x) => arr.push(x.data()));
 
                     return arr;
+                });
+        },
+        fetchLatestReadingsBydMachine({}, { machineID }) {
+            return db
+                .collection("readings")
+                .where("machineId", "==", machineID)
+                .orderBy("createdAt", "desc")
+                .get()
+                .then((res) => {
+                    if (res.empty) return {};
+
+                    return res.docs[0].data();
                 });
         },
         fetchProducts({ commit }) {
@@ -74,7 +101,7 @@ export default {
 
             return db.collection("machines").doc(`${id}`).update(payload);
         },
-        fetchMachinesFromDB() {
+        fetchMachinesFromDB({ commit }) {
             return db
                 .collection("machines")
                 .get()
@@ -82,7 +109,7 @@ export default {
                     let arr = [];
 
                     res.forEach((x) => arr.push(x.data()));
-
+                    commit("setMachines", arr);
                     return arr;
                 });
         },
