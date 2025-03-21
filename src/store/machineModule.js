@@ -67,7 +67,7 @@ export default {
                 .orderBy("createdAt", "desc")
                 .get()
                 .then((res) => {
-                    if (res.empty) return {};
+                    if (res.empty) return null;
 
                     return res.docs[0].data();
                 });

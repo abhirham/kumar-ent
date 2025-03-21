@@ -195,16 +195,22 @@ export default {
 
         async onMachineChange({ value }) {
             if (!this.previousReadingsByMachine[value.id]) {
+                this.$store.commit("setFullScreenLoader", true);
                 await this.$store
                     .dispatch("machineModule/fetchLatestReadingsBydMachine", {
                         machineID: value.id,
                     })
                     .then((res) => {
+                        if (!res) return;
+
                         this.previousReadingsByMachine[value.id] = {
                             ...res,
                             createdAt: res.createdAt.toDate(),
                         };
-                    });
+                    })
+                    .finally(() =>
+                        this.$store.commit("setFullScreenLoader", false)
+                    );
             }
 
             this.readings = value.products.reduce(

@@ -76,6 +76,9 @@ export default {
             this.machineToEdit = null;
             this.getMachines();
         },
+        getMachines() {
+            return this.$store.dispatch("machineModule/fetchMachinesFromDB");
+        },
     },
 };
 </script>
