@@ -42,7 +42,7 @@
                 v-for="(p, idx) in machine.products"
                 :key="p.key"
             >
-                <FloatLabel variant="in">
+                <FloatLabel class="flex flex-1" variant="in">
                     <CustomAutoComplete
                         v-model="machine.products[idx].name"
                         fluid
@@ -54,12 +54,11 @@
                     />
                     <label :for="`product${idx}`">Product Name</label>
                 </FloatLabel>
-                <FloatLabel variant="in">
+                <FloatLabel variant="in" v-if="false">
                     <Select
                         v-model="machine.products[idx].type"
                         :options="types"
                         id="productType"
-                        class="w-35"
                     />
                     <label for="productType">Product Type</label>
                 </FloatLabel>
@@ -117,7 +116,7 @@ function initialValues() {
         JSON.stringify({
             id: "",
             location: "",
-            products: [{ key: Date.now(), name: "", type: "Stocks" }],
+            products: [{ key: Date.now(), name: "", type: "Readings" }],
         })
     );
 }
@@ -159,7 +158,7 @@ export default {
         addProduct() {
             this.machine.products = [
                 ...this.machine.products,
-                { key: Date.now(), name: "", type: "Stocks" },
+                { key: Date.now(), name: "", type: "Readings" },
             ];
         },
         validate() {
@@ -167,8 +166,14 @@ export default {
             let { id, products, location } = this.machine;
 
             if (id.length === 0) arr.push("Enter a valid machine#.");
+            if (
+                this.$store.state.machineModule.machines.some(
+                    (x) => x.id === id
+                )
+            )
+                arr.push("Machine# already exists.");
             if (location.length === 0) arr.push("Location cannot be empty.");
-            if (products.filter((x) => !!x.name).length === 0)
+            if (products.some((x) => !x.name))
                 arr.push("Products cannot be empty.");
 
             this.errors = arr;
