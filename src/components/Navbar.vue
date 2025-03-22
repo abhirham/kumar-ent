@@ -8,11 +8,7 @@
                         <div class="flex-1" v-if="nav.spacer"></div>
                         <a
                             href="#"
-                            @click="
-                                nav.to
-                                    ? $router.push({ name: nav.to })
-                                    : nav.onClick()
-                            "
+                            @click="onNavClick(nav)"
                             :class="[
                                 'rounded-md px-3 py-2 text-sm font-medium',
                                 {
@@ -48,7 +44,7 @@
                         :key="nav.label"
                         href="#"
                         @click="
-                            $router.push({ name: nav.to });
+                            onNavClick(nav);
                             menuActive = false;
                         "
                         :class="[
@@ -106,6 +102,9 @@ export default {
     methods: {
         logout() {
             this.$store.dispatch("authModule/signout");
+        },
+        onNavClick(nav) {
+            nav.to ? this.$router.push({ name: nav.to }) : nav.onClick();
         },
     },
 };
