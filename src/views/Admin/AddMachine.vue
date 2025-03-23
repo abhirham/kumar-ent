@@ -50,6 +50,7 @@
                         :id="`product${idx}`"
                         variant="filled"
                         :items="productsInDB"
+                        :showEmptyMessage="false"
                         @item-select="(e) => onProductSelect(e.value, idx)"
                     />
                     <label :for="`product${idx}`">Product Name</label>
@@ -167,6 +168,7 @@ export default {
 
             if (id.length === 0) arr.push("Enter a valid machine#.");
             if (
+                !this.editMode &&
                 this.$store.state.machineModule.machines.some(
                     (x) => x.id === id
                 )

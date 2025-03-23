@@ -52,7 +52,6 @@ export default {
                 .where("machineId", "==", machineId)
                 .get()
                 .then((res) => {
-                    console.log(res);
                     let arr = [];
 
                     res.forEach((x) => arr.push(x.data()));

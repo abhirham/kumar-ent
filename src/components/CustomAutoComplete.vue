@@ -9,17 +9,30 @@
 
 <script>
 export default {
-    props: ["modelValue", "items", "optionLabel", "optionValue"],
+    props: {
+        modelValue: { required: true },
+        items: { required: true, type: Array },
+        optionLabel: { type: String, default: "" },
+        optionValue: { type: String, default: "" },
+        returnObject: { type: Boolean, default: false },
+    },
     computed: {
         value: {
             get() {
                 return this.modelValue;
             },
             set(val) {
-                this.$emit(
-                    "update:modelValue",
-                    this.optionValue ? val[this.optionValue] : val
-                );
+                let value = val ?? "";
+
+                if (!this.returnObject && typeof value === "object") {
+                    value = this.optionValue
+                        ? value[this.optionValue]
+                        : this.optionLabel
+                        ? value[this.optionLabel]
+                        : value;
+                }
+
+                this.$emit("update:modelValue", value);
             },
         },
     },

@@ -6,6 +6,7 @@
                 inputId="in_label"
                 dropdown
                 optionLabel="id"
+                returnObject
                 forceSelection
                 :items="machines"
                 @item-select="onMachineChange"
