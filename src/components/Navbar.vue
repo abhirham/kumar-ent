@@ -8,7 +8,7 @@
                         <div class="flex-1" v-if="nav.spacer"></div>
                         <a
                             href="#"
-                            @click="onNavClick(nav)"
+                            @click.prevent="onNavClick(nav)"
                             :class="[
                                 'rounded-md px-3 py-2 text-sm font-medium',
                                 {
@@ -43,7 +43,7 @@
                         v-if="!nav.spacer"
                         :key="nav.label"
                         href="#"
-                        @click="
+                        @click.prevent="
                             onNavClick(nav);
                             menuActive = false;
                         "

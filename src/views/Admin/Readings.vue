@@ -17,7 +17,6 @@
                     inputId="in_label"
                     dropdown
                     optionLabel="id"
-                    optionValue="id"
                     forceSelection
                     :items="machines"
                 />
@@ -25,7 +24,7 @@
             </FloatLabel>
             <Button
                 type="button"
-                :disabled="machineID === null"
+                :disabled="machineID.length === 0"
                 :loading="loading"
                 @click="fetchReadings"
                 label="Generate"
@@ -71,7 +70,7 @@ export default {
             readings: null,
             readingDate: new Date(),
             maxDate: new Date(),
-            machineID: null,
+            machineID: "",
             columns: [
                 { header: "Product", field: "name" },
                 { header: "OP RDG", field: "opening_reading" },
