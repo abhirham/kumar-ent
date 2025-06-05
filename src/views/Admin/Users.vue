@@ -6,6 +6,8 @@
             label="Add User"
         ></Button>
         <DataTable
+            scrollable
+            scrollHeight="80vh"
             :value="users"
             :loading="loading"
             tableStyle="min-width: 50rem"

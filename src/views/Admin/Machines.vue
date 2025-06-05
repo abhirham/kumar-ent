@@ -6,6 +6,8 @@
             label="Add Machine"
         ></Button>
         <DataTable
+            scrollable
+            scrollHeight="80vh"
             :value="machines"
             :loading="loading"
             tableStyle="min-width: 50rem"
