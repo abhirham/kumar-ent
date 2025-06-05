@@ -30,7 +30,6 @@
                     <InputNumber
                         :modelValue="p.opening_reading"
                         inputId="withoutgrouping"
-                        disabled
                         :useGrouping="false"
                         fluid
                     />
