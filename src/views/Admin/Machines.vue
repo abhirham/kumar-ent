@@ -7,7 +7,7 @@
         ></Button>
         <DataTable
             scrollable
-            scrollHeight="750px"
+            scrollHeight="80vh"
             :value="machines"
             :loading="loading"
             tableStyle="min-width: 50rem"
