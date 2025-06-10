@@ -1,4 +1,4 @@
-import { db, serverTimestamp, arrayUnion } from "@/libs/firebase";
+import { db, serverTimestamp, arrayUnion, Timestamp } from "@/libs/firebase";
 import moment from "moment";
 
 export default {
@@ -32,13 +32,15 @@ export default {
             let ref = db.collection("readings").doc();
 
             payload.id = ref.id;
-            payload.createdAt = serverTimestamp();
+            payload.createdAt = payload.createdAt
+                ? Timestamp.fromDate(new Date(payload.createdAt))
+                : serverTimestamp();
+
             payload.createdBy = rootState.userModule.user.uid;
 
-            return ref.set(payload).then((res) => {
-                payload.createdAt = moment();
-                return payload;
-            });
+            return ref
+                .set(payload)
+                .then((res) => ref.get().then((res) => res.data()));
         },
         fetchReadings(_, { date, machineId }) {
             const startOfDay = moment(date).startOf("day").toDate();
