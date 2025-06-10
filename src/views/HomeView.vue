@@ -96,6 +96,7 @@
                         inputId="withoutgrouping"
                         name="rate"
                         :useGrouping="false"
+                        :maxFractionDigits="3"
                         fluid
                     />
                     <Message
