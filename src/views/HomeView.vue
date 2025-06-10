@@ -20,7 +20,17 @@
                 >Last Reading Submitted at: {{ previousReadingCreatedAt }}</Tag
             >
         </div>
-        <template v-for="(p, , idx) in readings" :key="p.name">
+        <FloatLabel v-if="!!machine" variant="in">
+            <DatePicker
+                v-model="readingDate"
+                showIcon
+                iconDisplay="input"
+                date-format="dd-M-yy"
+                :max-date="new Date()"
+            />
+            <label>Reading Date</label>
+        </FloatLabel>
+        <template v-for="(p, key, idx) in readings" :key="p.name">
             <Divider v-if="idx > 0" />
             <div class="flex gap-10 items-center flex-wrap">
                 <div>
@@ -28,9 +38,10 @@
                 </div>
                 <FloatLabel class="flex-1 min-w-25" variant="in">
                     <InputNumber
-                        :modelValue="p.opening_reading"
+                        v-model="p.opening_reading"
                         inputId="withoutgrouping"
                         :useGrouping="false"
+                        @update:modelValue="updateCups(key)"
                         fluid
                     />
                     <label for="withoutgrouping">Open Reading</label>
@@ -46,6 +57,7 @@
                         inputId="withoutgrouping"
                         name="closing_reading"
                         :useGrouping="false"
+                        @update:modelValue="updateCups(key)"
                         fluid
                     />
                     <Message
@@ -112,7 +124,12 @@ import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
 
 const initialState = () =>
     JSON.parse(
-        JSON.stringify({ machine: null, readings: {}, errorMessages: {} })
+        JSON.stringify({
+            machine: null,
+            readings: {},
+            errorMessages: {},
+            readingDate: new Date(),
+        })
     );
 
 export default {
@@ -131,7 +148,10 @@ export default {
         previousReadingCreatedAt() {
             try {
                 return moment(
-                    this.previousReadingsByMachine[this.machine.id].createdAt
+                    new Date(
+                        this.previousReadingsByMachine[this.machine.id]
+                            .createdAt.seconds * 1000
+                    )
                 ).format("D-MMM-YYYY h:m A");
             } catch (e) {
                 return false;
@@ -139,11 +159,15 @@ export default {
         },
     },
     methods: {
+        updateCups(key) {
+            let obj = this.readings[key];
+            obj.cups = (obj.closing_reading || 0) - (obj.opening_reading || 0);
+        },
         validate() {
             let obj = {};
 
             Object.values(this.readings).forEach((x) => {
-                ["closing_reading", "cups", "rate"].forEach((y) => {
+                ["closing_reading", "rate"].forEach((y) => {
                     if (!x[y])
                         obj[x.name + `-${y}`] = "This field is required.";
                 });
@@ -178,6 +202,7 @@ export default {
                 .dispatch("machineModule/addReadings", {
                     machineId: this.machine.id,
                     readings: this.readings,
+                    createdAt: this.readingDate,
                 })
                 .then((res) => {
                     this.previousReadingsByMachine[res.machineId] = res;
@@ -203,10 +228,7 @@ export default {
                     .then((res) => {
                         if (!res) return;
 
-                        this.previousReadingsByMachine[value.id] = {
-                            ...res,
-                            createdAt: res.createdAt.toDate(),
-                        };
+                        this.previousReadingsByMachine[value.id] = res;
                     })
                     .finally(() =>
                         this.$store.commit("setFullScreenLoader", false)
@@ -230,7 +252,7 @@ export default {
     },
     watch: {
         machine(val) {
-            if (val === null) {
+            if (!val) {
                 this.readings = {};
                 return;
             }
