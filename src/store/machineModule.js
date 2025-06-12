@@ -42,16 +42,16 @@ export default {
                 .set(payload)
                 .then((res) => ref.get().then((res) => res.data()));
         },
-        fetchReadings(_, { date, machineId }) {
-            const startOfDay = moment(date).startOf("day").toDate();
-            const endOfDay = moment(date).endOf("day").toDate();
+        fetchReadings(_, { startDate, endDate }) {
+            const startOfDay = moment(startDate).startOf("day").toDate();
+            const endOfDay = moment(endDate).endOf("day").toDate();
 
             return db
                 .collection("readings")
-                .orderBy("createdAt", "desc")
+                .orderBy("machineId")
+                .orderBy("createdAt")
                 .where("createdAt", ">=", startOfDay)
                 .where("createdAt", "<", endOfDay)
-                .where("machineId", "==", machineId)
                 .get()
                 .then((res) => {
                     let arr = [];
