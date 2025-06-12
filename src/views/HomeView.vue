@@ -204,6 +204,7 @@ export default {
                     machineId: this.machine.id,
                     readings: this.readings,
                     createdAt: this.readingDate,
+                    location: this.machine.location,
                 })
                 .then((res) => {
                     this.previousReadingsByMachine[res.machineId] = res;
