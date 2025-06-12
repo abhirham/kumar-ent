@@ -1,5 +1,5 @@
 <template>
-    <div class="flex gap-5 wrapper">
+    <div class="flex wrapper">
         <aside class="w-40 border-r-2 border-gray-700/20">
             <Button
                 v-for="nav in navs"
@@ -14,9 +14,11 @@
                 fluid
             />
         </aside>
-        <Users v-if="active === 'Users'" />
-        <Machines v-if="active === 'Machines'" />
-        <Readings v-if="active === 'Readings'" />
+        <div class="max-w-full px-5">
+            <Users v-if="active === 'Users'" />
+            <Machines v-if="active === 'Machines'" />
+            <Readings v-if="active === 'Readings'" />
+        </div>
     </div>
 </template>
 
