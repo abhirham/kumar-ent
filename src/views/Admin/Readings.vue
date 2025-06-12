@@ -81,7 +81,6 @@
 
 <script>
 import moment from "moment";
-import { db, serverTimestamp, arrayUnion, Timestamp } from "@/libs/firebase";
 
 export default {
     data() {
