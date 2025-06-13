@@ -127,7 +127,9 @@ export default {
             let reportTotals = { total: 0 };
 
             this.readings.forEach((r) => {
-                rows[r.machineId] = rows[r.machineId] ?? {
+                let key = `${r.machineId}-${r.location}`;
+
+                rows[key] = rows[key] ?? {
                     machineId: r.machineId,
                     location: r.location,
                     totalCups: 0,
@@ -141,16 +143,14 @@ export default {
                         key: productKey,
                     };
 
-                    rows[r.machineId][productKey] = rows[r.machineId][
-                        productKey
-                    ] ?? {
+                    rows[key][productKey] = rows[key][productKey] ?? {
                         opening: v.opening_reading,
                         cups: 0,
                     };
 
-                    rows[r.machineId][productKey].closing = v.closing_reading;
-                    rows[r.machineId][productKey].cups += v.cups;
-                    rows[r.machineId].totalCups += v.cups;
+                    rows[key][productKey].closing = v.closing_reading;
+                    rows[key][productKey].cups += v.cups;
+                    rows[key].totalCups += v.cups;
 
                     reportTotals.total += v.cups;
                     reportTotals[productKey] =
