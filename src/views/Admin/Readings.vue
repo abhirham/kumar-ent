@@ -34,94 +34,70 @@
         </div>
         <template v-if="readings === null"></template>
         <div v-else-if="readings.length === 0">No readings found.</div>
+        <div v-else class="container overflow-auto">
+            <DataTable :value="displayReadings.rows">
+                <ColumnGroup type="header">
+                    <Row>
+                        <Column header="#" :rowspan="2"></Column>
+                        <Column header="Location" :rowspan="2"></Column>
+                        <Column header="Machine" :rowspan="2"></Column>
+                        <Column
+                            v-for="col in displayReadings.cols"
+                            :colspan="3"
+                        >
+                            <template #header>
+                                <div class="text-center w-full font-semibold">
+                                    {{ col.display }}
+                                </div>
+                            </template>
+                        </Column>
+                        <Column header="Total Cups" :rowspan="2"></Column>
+                    </Row>
+                    <Row>
+                        <template v-for="col in displayReadings.cols">
+                            <Column header="Opening"></Column>
+                            <Column header="Closing"></Column>
+                            <Column header="Cups"></Column>
+                        </template>
+                    </Row>
+                </ColumnGroup>
+                <Column field="#">
+                    <template #body="{ index }"> {{ index + 1 }} </template>
+                </Column>
+                <Column field="location"></Column>
+                <Column field="machineId"></Column>
+                <template v-for="col in displayReadings.cols">
+                    <Column :field="`${col.key}.opening`"></Column>
+                    <Column :field="`${col.key}.closing`"></Column>
+                    <Column :field="`${col.key}.cups`"></Column>
+                </template>
 
-        <DataTable
-            v-else
-            :value="displayReadings"
-            tableStyle="min-width: 50rem"
-        >
-            <ColumnGroup type="header">
-                <Row>
-                    <Column header="#" :rowspan="2"></Column>
-                    <Column header="Location" :rowspan="2"></Column>
-                    <Column header="Machine #" :rowspan="2"></Column>
-                    <Column
-                        header="ESPRESSO"
-                        headerStyle="text-align:right"
-                        :colspan="3"
-                    ></Column>
-                    <Column
-                        header="CUPPUCINE"
-                        bodyStyle="text-align:right"
-                        :colspan="3"
-                    ></Column>
-                    <Column
-                        header="CAFELATTE"
-                        headerStyle="text-align:right"
-                        :colspan="3"
-                    ></Column>
-                    <Column header="Total Coffee" :rowspan="2"></Column>
-                    <Column
-                        header="MILK"
-                        headerStyle="text-align:right"
-                        :colspan="3"
-                    ></Column>
-                    <Column header="Total Cups" :rowspan="2"></Column>
-                </Row>
-                <Row>
-                    <Column header="Opening"></Column>
-                    <Column header="Closing"></Column>
-                    <Column header="# cups"></Column>
-                    <Column header="Opening"></Column>
-                    <Column header="Closing"></Column>
-                    <Column header="# cups"></Column>
-                    <Column header="Opening"></Column>
-                    <Column header="Closing"></Column>
-                    <Column header="# cups"></Column>
-                    <Column header="Opening"></Column>
-                    <Column header="Closing"></Column>
-                    <Column header="# cups"></Column>
-                </Row>
-            </ColumnGroup>
-            <Column field="#">
-                <template #body="{ index }"> {{ index + 1 }} </template>
-            </Column>
-            <Column></Column>
-            <Column field="machineId"></Column>
-            <Column field="Espresso.opening"></Column>
-            <Column field="Espresso.closing"></Column>
-            <Column field="Espresso.cups"></Column>
-            <Column field="Cafelatte.opening"></Column>
-            <Column field="Cafelatte.closing"></Column>
-            <Column field="Cafelatte.cups"></Column>
-            <Column field="Cafelatte.opening"></Column>
-            <Column field="Cafelatte.closing"></Column>
-            <Column field="Cafelatte.cups"></Column>
-            <Column field="totalCoffee"></Column>
-            <Column>
-                <template #body="{ data }">
-                    {{ data["Tea Milk"].opening }}
-                </template>
-            </Column>
-            <Column>
-                <template #body="{ data }">
-                    {{ data["Tea Milk"].closing }}
-                </template>
-            </Column>
-            <Column>
-                <template #body="{ data }">
-                    {{ data["Tea Milk"].cups }}
-                </template>
-            </Column>
-            <Column field="totalCups"></Column>
-            <template #empty> No machines found. </template>
-        </DataTable>
+                <Column field="totalCups"></Column>
+                <ColumnGroup type="footer">
+                    <Row>
+                        <Column
+                            footer="Totals:"
+                            footerStyle="text-align:center"
+                            :colspan="3"
+                        />
+                        <template v-for="col in displayReadings.cols">
+                            <Column />
+                            <Column />
+                            <Column
+                                :footer="displayReadings.reportTotals[col.key]"
+                            />
+                        </template>
+                        <Column :footer="displayReadings.reportTotals.total" />
+                    </Row>
+                </ColumnGroup>
+                <template #empty> No machines found. </template>
+            </DataTable>
+        </div>
     </div>
 </template>
 
 <script>
 import moment from "moment";
-import { db, serverTimestamp, arrayUnion, Timestamp } from "@/libs/firebase";
 
 export default {
     data() {
@@ -136,7 +112,7 @@ export default {
                 { header: "Location", field: "name" },
                 { header: "Machine #", field: "opening_reading" },
                 { header: "Cl RDG", field: "closing_reading" },
-                { header: "# Cups", field: "cups" },
+                { header: "Cups", field: "cups" },
                 { header: "Rate", field: "rate" },
             ],
         };
@@ -146,37 +122,55 @@ export default {
             return this.$store.state.machineModule.machines;
         },
         displayReadings() {
-            let obj = {};
+            let rows = {};
+            let cols = {};
+            let reportTotals = { total: 0 };
 
             this.readings.forEach((r) => {
-                obj[r.machineId] = obj[r.machineId] ?? {
+                rows[r.machineId] = rows[r.machineId] ?? {
                     machineId: r.machineId,
+                    location: r.location,
+                    totalCups: 0,
                 };
 
                 Object.values(r.readings).forEach((v) => {
-                    obj[r.machineId][v.name] = obj[r.machineId][v.name] ?? {
+                    let productKey = v.name.replace(/ /g, "_");
+
+                    cols[productKey] = cols[productKey] ?? {
+                        display: v.name,
+                        key: productKey,
+                    };
+
+                    rows[r.machineId][productKey] = rows[r.machineId][
+                        productKey
+                    ] ?? {
                         opening: v.opening_reading,
                         cups: 0,
                     };
 
-                    obj[r.machineId][v.name].closing = v.closing_reading;
-                    obj[r.machineId][v.name].cups += v.cups;
+                    rows[r.machineId][productKey].closing = v.closing_reading;
+                    rows[r.machineId][productKey].cups += v.cups;
+                    rows[r.machineId].totalCups += v.cups;
+
+                    reportTotals.total += v.cups;
+                    reportTotals[productKey] =
+                        (reportTotals[productKey] ?? 0) + v.cups;
                 });
 
-                obj[r.machineId].totalCoffee = [
-                    "Cappuccino",
-                    "Espresso",
-                    "Cafelatte",
-                ].reduce((acc, x) => {
-                    return acc + obj[r.machineId][x].cups;
-                }, 0);
-
-                obj[r.machineId].totalCups =
-                    obj[r.machineId].totalCoffee +
-                    obj[r.machineId]["Tea Milk"].cups;
+                // rows[r.machineId].totalCoffee = [
+                //     "Cappuccino",
+                //     "Espresso",
+                //     "Cafelatte",
+                // ].reduce((acc, x) => {
+                //     return acc + rows[r.machineId][x].cups;
+                // }, 0);
             });
 
-            return Object.values(obj);
+            return {
+                rows: Object.values(rows),
+                cols: Object.values(cols),
+                reportTotals,
+            };
         },
     },
     methods: {

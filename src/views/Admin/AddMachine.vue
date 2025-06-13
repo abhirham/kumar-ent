@@ -136,7 +136,7 @@ export default {
         },
         productsToAdd() {
             return this.machine.products.map(({ name, type }) => ({
-                name,
+                name: name.trim().toUpperCase(),
                 type,
             }));
         },
