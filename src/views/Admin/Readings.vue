@@ -40,7 +40,7 @@
                     <Row>
                         <Column header="#" :rowspan="2"></Column>
                         <Column header="Location" :rowspan="2"></Column>
-                        <Column header="Machine #" :rowspan="2"></Column>
+                        <Column header="Machine" :rowspan="2"></Column>
                         <Column
                             v-for="col in displayReadings.cols"
                             :colspan="3"
@@ -57,7 +57,7 @@
                         <template v-for="col in displayReadings.cols">
                             <Column header="Opening"></Column>
                             <Column header="Closing"></Column>
-                            <Column header="# cups"></Column>
+                            <Column header="Cups"></Column>
                         </template>
                     </Row>
                 </ColumnGroup>
@@ -73,6 +73,23 @@
                 </template>
 
                 <Column field="totalCups"></Column>
+                <ColumnGroup type="footer">
+                    <Row>
+                        <Column
+                            footer="Totals:"
+                            footerStyle="text-align:center"
+                            :colspan="3"
+                        />
+                        <template v-for="col in displayReadings.cols">
+                            <Column />
+                            <Column />
+                            <Column
+                                :footer="displayReadings.reportTotals[col.key]"
+                            />
+                        </template>
+                        <Column :footer="displayReadings.reportTotals.total" />
+                    </Row>
+                </ColumnGroup>
                 <template #empty> No machines found. </template>
             </DataTable>
         </div>
@@ -95,7 +112,7 @@ export default {
                 { header: "Location", field: "name" },
                 { header: "Machine #", field: "opening_reading" },
                 { header: "Cl RDG", field: "closing_reading" },
-                { header: "# Cups", field: "cups" },
+                { header: "Cups", field: "cups" },
                 { header: "Rate", field: "rate" },
             ],
         };
@@ -107,6 +124,7 @@ export default {
         displayReadings() {
             let rows = {};
             let cols = {};
+            let reportTotals = { total: 0 };
 
             this.readings.forEach((r) => {
                 rows[r.machineId] = rows[r.machineId] ?? {
@@ -133,6 +151,10 @@ export default {
                     rows[r.machineId][productKey].closing = v.closing_reading;
                     rows[r.machineId][productKey].cups += v.cups;
                     rows[r.machineId].totalCups += v.cups;
+
+                    reportTotals.total += v.cups;
+                    reportTotals[productKey] =
+                        (reportTotals[productKey] ?? 0) + v.cups;
                 });
 
                 // rows[r.machineId].totalCoffee = [
@@ -144,7 +166,11 @@ export default {
                 // }, 0);
             });
 
-            return { rows: Object.values(rows), cols: cols };
+            return {
+                rows: Object.values(rows),
+                cols: Object.values(cols),
+                reportTotals,
+            };
         },
     },
     methods: {
