@@ -35,6 +35,7 @@
         <template v-if="readings === null"></template>
         <div v-else-if="readings.length === 0">No readings found.</div>
         <div v-else class="container overflow-auto">
+            <Button @click="exportCSV">Export CSV</Button>
             <DataTable :value="displayReadings.rows">
                 <ColumnGroup type="header">
                     <Row>
@@ -108,13 +109,6 @@ export default {
             startDate: new Date(),
             endDate: new Date(),
             maxDate: new Date(),
-            columns: [
-                { header: "Location", field: "name" },
-                { header: "Machine #", field: "opening_reading" },
-                { header: "Cl RDG", field: "closing_reading" },
-                { header: "Cups", field: "cups" },
-                { header: "Rate", field: "rate" },
-            ],
         };
     },
     computed: {
@@ -174,6 +168,92 @@ export default {
         },
     },
     methods: {
+        exportCSV() {
+            // Destructure for easier access and less repetition.
+            const {
+                cols: columnDefs,
+                rows: dataRows,
+                reportTotals,
+            } = this.displayReadings;
+
+            // --- 1. Build Header Rows ---
+
+            // Use flatMap to elegantly create the repeating header sections.
+            const mainHeader = [
+                "#",
+                "Location",
+                "Machine",
+                ...columnDefs.flatMap((col) => [col.display, "", ""]), // [Display Name, (empty), (empty)] for each column
+                "Total Cups",
+            ];
+
+            const subHeader = [
+                "", // Corresponds to #
+                "", // Corresponds to Location
+                "", // Corresponds to Machine
+                ...columnDefs.flatMap(() => ["Opening", "Closing", "Cups"]), // [Opening, Closing, Cups] for each column
+            ];
+
+            // --- 2. Build Data and Totals Rows ---
+
+            const processedDataRows = dataRows.map((row, index) => [
+                index + 1,
+                row.location,
+                row.machineId,
+                ...columnDefs.flatMap((col) => [
+                    row[col.key].opening,
+                    row[col.key].closing,
+                    row[col.key].cups,
+                ]),
+                row.totalCups,
+            ]);
+
+            const totalsRow = [
+                "",
+                "Totals",
+                "",
+                ...columnDefs.flatMap((col) => ["", "", reportTotals[col.key]]),
+                reportTotals.total,
+            ];
+
+            // --- 3. Combine All Rows and Convert to a TSV String ---
+
+            const allRows = [
+                mainHeader,
+                subHeader,
+                ...processedDataRows,
+                totalsRow,
+            ];
+
+            // Helper function to safely convert a 2D array to a TSV string.
+            const toTsvString = (data) => {
+                return data
+                    .map((row) =>
+                        row
+                            .map((cell) => `${cell ?? ""}`.replace(/\t/g, " "))
+                            .join("\t")
+                    )
+                    .join("\n");
+            };
+
+            const tsvContent = toTsvString(allRows);
+
+            // --- 4. Create and Trigger Download ---
+
+            // The download logic is already good, just using the cleaner variable.
+            const startDate = moment(this.startDate).format("YYYY-MM-DD");
+            const endDate = moment(this.endDate).format("YYYY-MM-DD");
+            const fileName = `Report (${startDate} to ${endDate}).tsv`;
+
+            const link = document.createElement("a");
+            link.href =
+                "data:text/tsv;charset=utf-8," + encodeURIComponent(tsvContent);
+            link.download = fileName;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
         onStartDateChange(val) {
             if (val > this.endDate) {
                 this.endDate = null;
