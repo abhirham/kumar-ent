@@ -1,18 +1,24 @@
 <template>
     <div class="flex wrapper">
         <aside class="w-40 border-r-2 border-gray-700/20">
-            <Button
-                v-for="nav in navs"
-                :key="nav.label"
-                :label="nav.label"
-                :icon="`pi ${nav.icon}`"
-                :severity="nav.label === active ? 'contrast' : 'secondary'"
-                @click="active = nav.label"
-                variant="text"
-                class="justify-start"
-                :size="nav.label === active ? 'normal' : 'small'"
-                fluid
-            />
+            <Listbox
+                class="navList"
+                v-model="active"
+                :options="navs"
+                optionLabel="label"
+                optionValue="label"
+                :style="{
+                    '--p-listbox-border-color': 'transparent',
+                    '--p-listbox-shadow': 'none',
+                }"
+            >
+                <template #option="{ option }">
+                    <div class="flex items-center">
+                        <i :class="`${option.icon} mr-2`"> </i>
+                        <div>{{ option.label }}</div>
+                    </div>
+                </template>
+            </Listbox>
         </aside>
         <div class="max-w-full px-5">
             <Users v-if="active === 'Users'" />
@@ -35,15 +41,15 @@ export default {
             navs: [
                 {
                     label: "Users",
-                    icon: "pi-users",
+                    icon: "pi pi-users",
                 },
                 {
                     label: "Machines",
-                    icon: "pi-shop",
+                    icon: "pi pi-shop",
                 },
                 {
                     label: "Readings",
-                    icon: "pi-warehouse",
+                    icon: "pi pi-warehouse",
                 },
             ],
         };
