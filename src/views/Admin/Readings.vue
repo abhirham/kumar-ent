@@ -35,6 +35,7 @@
         <template v-if="readings === null"></template>
         <div v-else-if="readings.length === 0">No readings found.</div>
         <div v-else class="container overflow-auto">
+            <Button @click="exportCSV">Export CSV</Button>
             <DataTable :value="displayReadings.rows">
                 <ColumnGroup type="header">
                     <Row>
@@ -108,13 +109,6 @@ export default {
             startDate: new Date(),
             endDate: new Date(),
             maxDate: new Date(),
-            columns: [
-                { header: "Location", field: "name" },
-                { header: "Machine #", field: "opening_reading" },
-                { header: "Cl RDG", field: "closing_reading" },
-                { header: "Cups", field: "cups" },
-                { header: "Rate", field: "rate" },
-            ],
         };
     },
     computed: {
@@ -174,6 +168,71 @@ export default {
         },
     },
     methods: {
+        exportCSV() {
+            let cols = [];
+
+            cols.push(["#", "Location", "Machine"]);
+
+            this.displayReadings.cols.map((x) =>
+                cols[0].push(x.display, "", "")
+            );
+
+            cols[0].push("Total Cups");
+
+            cols.push(["", "", ""]);
+
+            this.displayReadings.cols.map((x) =>
+                cols[1].push("Opening", "Closing", "Cups")
+            );
+
+            cols = cols
+                .map((row) => row.map((x) => x.replace(/\t/g, " ")).join("\t"))
+                .join("\n");
+
+            let rows = this.displayReadings.rows.map((row, idx) => {
+                let d = [idx + 1, row.location, row.machineId];
+
+                this.displayReadings.cols.map((x) => {
+                    d.push(
+                        row[x.key].opening,
+                        row[x.key].closing,
+                        row[x.key].cups
+                    );
+                });
+
+                d.push(row.totalCups);
+
+                return d;
+            });
+
+            let totalsRow = ["", "Totals", ""];
+
+            this.displayReadings.cols.forEach((x) => {
+                totalsRow.push(
+                    "",
+                    "",
+                    this.displayReadings.reportTotals[x.key]
+                );
+            });
+            totalsRow.push(this.displayReadings.reportTotals.total);
+
+            rows.push(totalsRow);
+
+            rows = rows
+                .map((r) => r.map((x) => `${x}`.replace(/\t/g, " ")).join("\t"))
+                .join("\n");
+
+            let arr = cols + "\n" + rows;
+            let a = document.createElement("a");
+            a.textContent = "download";
+            a.download = `Report (${moment(this.startDate).format(
+                "YYYY-MM-DD"
+            )} to ${moment(this.endDate).format("YYYY-MM-DD")}).tsv`;
+            a.href = "data:text/tsv;charset=utf-8," + encodeURIComponent(arr);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        },
         onStartDateChange(val) {
             if (val > this.endDate) {
                 this.endDate = null;
