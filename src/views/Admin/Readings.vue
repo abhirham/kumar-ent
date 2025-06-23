@@ -36,7 +36,12 @@
         <div v-else-if="readings.length === 0">No readings found.</div>
         <div v-else class="container overflow-auto">
             <Button @click="exportCSV">Export CSV</Button>
-            <DataTable :value="displayReadings.rows">
+            <DataTable
+                :value="displayReadings.rows"
+                scrollable
+                scrollHeight="70vh"
+                stripedRows
+            >
                 <ColumnGroup type="header">
                     <Row>
                         <Column header="#" :rowspan="2"></Column>
