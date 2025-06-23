@@ -169,69 +169,90 @@ export default {
     },
     methods: {
         exportCSV() {
-            let cols = [];
+            // Destructure for easier access and less repetition.
+            const {
+                cols: columnDefs,
+                rows: dataRows,
+                reportTotals,
+            } = this.displayReadings;
 
-            cols.push(["#", "Location", "Machine"]);
+            // --- 1. Build Header Rows ---
 
-            this.displayReadings.cols.map((x) =>
-                cols[0].push(x.display, "", "")
-            );
+            // Use flatMap to elegantly create the repeating header sections.
+            const mainHeader = [
+                "#",
+                "Location",
+                "Machine",
+                ...columnDefs.flatMap((col) => [col.display, "", ""]), // [Display Name, (empty), (empty)] for each column
+                "Total Cups",
+            ];
 
-            cols[0].push("Total Cups");
+            const subHeader = [
+                "", // Corresponds to #
+                "", // Corresponds to Location
+                "", // Corresponds to Machine
+                ...columnDefs.flatMap(() => ["Opening", "Closing", "Cups"]), // [Opening, Closing, Cups] for each column
+            ];
 
-            cols.push(["", "", ""]);
+            // --- 2. Build Data and Totals Rows ---
 
-            this.displayReadings.cols.map((x) =>
-                cols[1].push("Opening", "Closing", "Cups")
-            );
+            const processedDataRows = dataRows.map((row, index) => [
+                index + 1,
+                row.location,
+                row.machineId,
+                ...columnDefs.flatMap((col) => [
+                    row[col.key].opening,
+                    row[col.key].closing,
+                    row[col.key].cups,
+                ]),
+                row.totalCups,
+            ]);
 
-            cols = cols
-                .map((row) => row.map((x) => x.replace(/\t/g, " ")).join("\t"))
-                .join("\n");
+            const totalsRow = [
+                "",
+                "Totals",
+                "",
+                ...columnDefs.flatMap((col) => ["", "", reportTotals[col.key]]),
+                reportTotals.total,
+            ];
 
-            let rows = this.displayReadings.rows.map((row, idx) => {
-                let d = [idx + 1, row.location, row.machineId];
+            // --- 3. Combine All Rows and Convert to a TSV String ---
 
-                this.displayReadings.cols.map((x) => {
-                    d.push(
-                        row[x.key].opening,
-                        row[x.key].closing,
-                        row[x.key].cups
-                    );
-                });
+            const allRows = [
+                mainHeader,
+                subHeader,
+                ...processedDataRows,
+                totalsRow,
+            ];
 
-                d.push(row.totalCups);
+            // Helper function to safely convert a 2D array to a TSV string.
+            const toTsvString = (data) => {
+                return data
+                    .map((row) =>
+                        row
+                            .map((cell) => `${cell ?? ""}`.replace(/\t/g, " "))
+                            .join("\t")
+                    )
+                    .join("\n");
+            };
 
-                return d;
-            });
+            const tsvContent = toTsvString(allRows);
 
-            let totalsRow = ["", "Totals", ""];
+            // --- 4. Create and Trigger Download ---
 
-            this.displayReadings.cols.forEach((x) => {
-                totalsRow.push(
-                    "",
-                    "",
-                    this.displayReadings.reportTotals[x.key]
-                );
-            });
-            totalsRow.push(this.displayReadings.reportTotals.total);
+            // The download logic is already good, just using the cleaner variable.
+            const startDate = moment(this.startDate).format("YYYY-MM-DD");
+            const endDate = moment(this.endDate).format("YYYY-MM-DD");
+            const fileName = `Report (${startDate} to ${endDate}).tsv`;
 
-            rows.push(totalsRow);
+            const link = document.createElement("a");
+            link.href =
+                "data:text/tsv;charset=utf-8," + encodeURIComponent(tsvContent);
+            link.download = fileName;
 
-            rows = rows
-                .map((r) => r.map((x) => `${x}`.replace(/\t/g, " ")).join("\t"))
-                .join("\n");
-
-            let arr = cols + "\n" + rows;
-            let a = document.createElement("a");
-            a.textContent = "download";
-            a.download = `Report (${moment(this.startDate).format(
-                "YYYY-MM-DD"
-            )} to ${moment(this.endDate).format("YYYY-MM-DD")}).tsv`;
-            a.href = "data:text/tsv;charset=utf-8," + encodeURIComponent(arr);
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         },
         onStartDateChange(val) {
             if (val > this.endDate) {
