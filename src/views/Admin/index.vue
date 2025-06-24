@@ -1,24 +1,24 @@
 <template>
     <div class="flex wrapper">
         <aside class="w-40 border-r-2 border-gray-700/20">
-            <Listbox
-                class="navList"
-                v-model="active"
-                :options="navs"
-                optionLabel="label"
-                optionValue="label"
-                :style="{
-                    '--p-listbox-border-color': 'transparent',
-                    '--p-listbox-shadow': 'none',
-                }"
-            >
-                <template #option="{ option }">
+            <ul class="p-listbox-list">
+                <li
+                    @click="active = option.label"
+                    v-for="option in navs"
+                    :class="[
+                        'px-5 py-2 cursor-pointer hover:bg-blue-100 rounded-sm mb-1',
+                        {
+                            'bg-blue-950 hover:bg-blue-950 text-white':
+                                option.label === active,
+                        },
+                    ]"
+                >
                     <div class="flex items-center">
                         <i :class="`${option.icon} mr-2`"> </i>
                         <div>{{ option.label }}</div>
                     </div>
-                </template>
-            </Listbox>
+                </li>
+            </ul>
         </aside>
         <div class="max-w-full px-5">
             <Users v-if="active === 'Users'" />
@@ -53,6 +53,15 @@ export default {
                 },
             ],
         };
+    },
+    methods: {
+        handleChange(event) {
+            if (event.value == null) {
+                return;
+            }
+
+            this.active = event.value;
+        },
     },
     mounted() {
         this.$store.dispatch("machineModule/fetchProducts");
