@@ -163,7 +163,18 @@ export default {
 
             this.readings.forEach((r) => {
                 let key = `${r.machineId}-${r.location}-${count}`;
-                let foundReset = false;
+
+                Object.values(r.readings).some((v) => {
+                    let productKey = v.name.replace(/ /g, "_");
+
+                    if (rows[key]?.[productKey]?.closing > v.opening_reading) {
+                        count++;
+                        key = `${r.machineId}-${r.location}-${count}`;
+                        return true;
+                    }
+
+                    return false;
+                });
 
                 rows[key] = rows[key] ?? {
                     machineId: r.machineId,
@@ -181,26 +192,6 @@ export default {
                         display: v.name,
                         key: productKey,
                     };
-
-                    if (
-                        !foundReset &&
-                        rows[key]?.[productKey]?.closing > v.opening_reading
-                    ) {
-                        foundReset = true;
-                        count++;
-
-                        key = `${r.machineId}-${r.location}-${count}`;
-
-                        rows[key] = rows[key] ?? {
-                            machineId: r.machineId,
-                            location: r.location,
-                            totalCups: 0,
-                            startDate: moment(r.createdAt).format(
-                                "YYYY-MMM-DD"
-                            ),
-                            endDate: moment(r.createdAt).format("YYYY-MMM-DD"),
-                        };
-                    }
 
                     rows[key][productKey] = rows[key][productKey] ?? {
                         opening: v.opening_reading,
@@ -263,9 +254,9 @@ export default {
                 ),
 
                 ...columnDefs.flatMap((col) => [
-                    row[col.key].opening,
-                    row[col.key].closing,
-                    row[col.key].cups,
+                    row[col.key]?.opening,
+                    row[col.key]?.closing,
+                    row[col.key]?.cups,
                 ]),
                 ...this.appendCols.map((x) =>
                     x.value ? x.value({ index }) : row[x.field]
