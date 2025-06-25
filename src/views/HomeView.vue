@@ -169,7 +169,7 @@ export default {
 
             Object.values(this.readings).forEach((x) => {
                 ["closing_reading", "rate"].forEach((y) => {
-                    if (!x[y])
+                    if ((x[y] ?? null) === null)
                         obj[x.name + `-${y}`] = "This field is required.";
                 });
 
