@@ -44,9 +44,13 @@
             >
                 <ColumnGroup type="header">
                     <Row>
-                        <Column header="#" :rowspan="2"></Column>
-                        <Column header="Location" :rowspan="2"></Column>
-                        <Column header="Machine" :rowspan="2"></Column>
+                        <Column
+                            v-for="col in prependCols"
+                            :key="col.label"
+                            :header="col.label"
+                            :rowspan="2"
+                        ></Column>
+
                         <Column
                             v-for="col in displayReadings.cols"
                             :colspan="3"
@@ -57,7 +61,12 @@
                                 </div>
                             </template>
                         </Column>
-                        <Column header="Total Cups" :rowspan="2"></Column>
+                        <Column
+                            v-for="col in appendCols"
+                            :key="col.label"
+                            :header="col.label"
+                            :rowspan="2"
+                        ></Column>
                     </Row>
                     <Row>
                         <template v-for="col in displayReadings.cols">
@@ -67,25 +76,38 @@
                         </template>
                     </Row>
                 </ColumnGroup>
-                <Column field="#">
-                    <template #body="{ index }"> {{ index + 1 }} </template>
+
+                <Column :key="col.label" v-for="col in prependCols">
+                    <template #body="attrs">
+                        <div class="text-nowrap">
+                            {{
+                                col.value
+                                    ? col.value(attrs)
+                                    : attrs.data[col.field]
+                            }}
+                        </div>
+                    </template>
                 </Column>
-                <Column field="location"></Column>
-                <Column field="machineId"></Column>
                 <template v-for="col in displayReadings.cols">
                     <Column :field="`${col.key}.opening`"></Column>
                     <Column :field="`${col.key}.closing`"></Column>
                     <Column :field="`${col.key}.cups`"></Column>
                 </template>
-
-                <Column field="totalCups"></Column>
+                <Column :key="col.label" v-for="col in appendCols">
+                    <template #body="attrs">
+                        <div class="text-nowrap">
+                            {{
+                                col.value
+                                    ? col.value(attrs)
+                                    : attrs.data[col.field]
+                            }}
+                        </div>
+                    </template>
+                </Column>
                 <ColumnGroup type="footer">
                     <Row>
-                        <Column
-                            footer="Totals:"
-                            footerStyle="text-align:center"
-                            :colspan="3"
-                        />
+                        <Column footer="Totals:" />
+                        <Column v-for="(col, idx) in prependCols.slice(1)" />
                         <template v-for="col in displayReadings.cols">
                             <Column />
                             <Column />
@@ -108,12 +130,25 @@ import moment from "moment";
 export default {
     data() {
         return {
-            accordionValue: 0,
             loading: false,
             readings: null,
             startDate: new Date(),
             endDate: new Date(),
             maxDate: new Date(),
+            prependCols: [
+                { label: "#", value: ({ index }) => index + 1 },
+                { label: "Location", field: "location", footerText: "Totals" },
+                { label: "Machine", field: "machineId" },
+                { label: "Start Date", field: "startDate" },
+                { label: "End Date", field: "endDate" },
+            ],
+            appendCols: [
+                {
+                    label: "Total Cups",
+                    field: "totalCups",
+                    footerValue: ({ data }) => data.total,
+                },
+            ],
         };
     },
     computed: {
@@ -124,15 +159,31 @@ export default {
             let rows = {};
             let cols = {};
             let reportTotals = { total: 0 };
+            let count = 0;
 
             this.readings.forEach((r) => {
-                let key = `${r.machineId}-${r.location}`;
+                let key = `${r.machineId}-${r.location}-${count}`;
+
+                Object.values(r.readings).some((v) => {
+                    let productKey = v.name.replace(/ /g, "_");
+
+                    if (rows[key]?.[productKey]?.closing > v.opening_reading) {
+                        count++;
+                        key = `${r.machineId}-${r.location}-${count}`;
+                        return true;
+                    }
+
+                    return false;
+                });
 
                 rows[key] = rows[key] ?? {
                     machineId: r.machineId,
                     location: r.location,
                     totalCups: 0,
+                    startDate: moment(r.createdAt).format("YYYY-MMM-DD"),
                 };
+
+                rows[key].endDate = moment(r.createdAt).format("YYYY-MMM-DD");
 
                 Object.values(r.readings).forEach((v) => {
                     let productKey = v.name.replace(/ /g, "_");
@@ -185,40 +236,41 @@ export default {
 
             // Use flatMap to elegantly create the repeating header sections.
             const mainHeader = [
-                "#",
-                "Location",
-                "Machine",
+                ...this.prependCols.map((x) => x.label),
                 ...columnDefs.flatMap((col) => [col.display, "", ""]), // [Display Name, (empty), (empty)] for each column
-                "Total Cups",
+                ...this.appendCols.map((x) => x.label),
             ];
 
             const subHeader = [
-                "", // Corresponds to #
-                "", // Corresponds to Location
-                "", // Corresponds to Machine
+                ...this.prependCols.map((x) => ""),
                 ...columnDefs.flatMap(() => ["Opening", "Closing", "Cups"]), // [Opening, Closing, Cups] for each column
             ];
 
             // --- 2. Build Data and Totals Rows ---
 
             const processedDataRows = dataRows.map((row, index) => [
-                index + 1,
-                row.location,
-                row.machineId,
+                ...this.prependCols.map((x) =>
+                    x.value ? x.value({ index }) : row[x.field]
+                ),
+
                 ...columnDefs.flatMap((col) => [
-                    row[col.key].opening,
-                    row[col.key].closing,
-                    row[col.key].cups,
+                    row[col.key]?.opening,
+                    row[col.key]?.closing,
+                    row[col.key]?.cups,
                 ]),
-                row.totalCups,
+                ...this.appendCols.map((x) =>
+                    x.value ? x.value({ index }) : row[x.field]
+                ),
             ]);
 
             const totalsRow = [
-                "",
-                "Totals",
-                "",
+                ...this.prependCols.map((x) => x.footerText ?? ""),
                 ...columnDefs.flatMap((col) => ["", "", reportTotals[col.key]]),
-                reportTotals.total,
+                ...this.appendCols.map((x) =>
+                    x.footerValue
+                        ? x.footerValue({ data: reportTotals })
+                        : x.footerText ?? ""
+                ),
             ];
 
             // --- 3. Combine All Rows and Convert to a TSV String ---
