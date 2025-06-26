@@ -31,6 +31,12 @@
                 @click="fetchReadings"
                 label="Generate"
             ></Button>
+            <Button
+                type="button"
+                :loading="loading"
+                @click="deleteReadings"
+                label="Delete"
+            ></Button>
         </div>
         <template v-if="readings === null"></template>
         <div v-else-if="readings.length === 0">No readings found.</div>
@@ -125,6 +131,7 @@
 </template>
 
 <script>
+import { db } from "@/libs/firebase";
 import moment from "moment";
 
 export default {
@@ -318,6 +325,32 @@ export default {
         },
         dateFormat(date) {
             return moment(date).format("h:mm a");
+        },
+        deleteReadings() {
+            this.loading = true;
+            db.collection("readings")
+                .orderBy("createdAt")
+                .where(
+                    "createdAt",
+                    "<",
+                    moment("Jun 1 2025", "MMM D YYYY").startOf("day").toDate()
+                )
+                .get()
+                .then((res) => {
+                    let arr = [];
+
+                    res.forEach((x) => {
+                        arr.push(x.ref.delete());
+                    });
+
+                    return Promise.all(arr);
+                })
+                .finally((res) => {
+                    this.loading = false;
+                    this.$store.commit("notificationModule/setAlert", {
+                        alertMessage: "Readings have been deleted.",
+                    });
+                });
         },
         fetchReadings() {
             this.readings = null;
