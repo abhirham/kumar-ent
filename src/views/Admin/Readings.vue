@@ -118,8 +118,9 @@
                     <template #body="{ data }">
                         <Button
                             size="small"
-                            icon="pi pi-times"
+                            icon="pi pi-trash"
                             severity="danger"
+                            text
                             @click="onDelete(data)"
                         ></Button>
                     </template>
