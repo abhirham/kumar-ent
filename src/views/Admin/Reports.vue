@@ -137,7 +137,6 @@
                                 </template>
                             </Column>
                         </template>
-                        <!-- <Column :footer="displayReadings.reportTotals.total" /> -->
                         <Column v-for="col in appendCols">
                             <template #footer="attrs">
                                 <div class="text-nowrap font-bold">
