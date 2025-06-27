@@ -35,7 +35,7 @@
         <template v-if="readings === null"></template>
         <div v-else-if="readings.length === 0">No readings found.</div>
         <div v-else class="container overflow-auto">
-            <Button @click="exportCSV">Export CSV</Button>
+            <Button @click="exportCSV" class="mb-5">Export CSV</Button>
             <DataTable
                 :value="displayReadings.rows"
                 scrollable
