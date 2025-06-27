@@ -41,6 +41,7 @@
                 scrollable
                 scrollHeight="70vh"
                 stripedRows
+                showGridlines
             >
                 <ColumnGroup type="header">
                     <Row>
@@ -89,17 +90,30 @@
                     </template>
                 </Column>
                 <template v-for="col in displayReadings.cols">
-                    <Column :field="`${col.key}.opening`"></Column>
-                    <Column :field="`${col.key}.closing`"></Column>
-                    <Column :field="`${col.key}.cups`"></Column>
+                    <Column :field="`${col.key}.opening`">
+                        <template #body="{ data }">
+                            {{ data[col.key].opening.toLocaleString("en-IN") }}
+                        </template>
+                    </Column>
+                    <Column :field="`${col.key}.closing`">
+                        <template #body="{ data }">
+                            {{ data[col.key].closing.toLocaleString("en-IN") }}
+                        </template>
+                    </Column>
+                    <Column :field="`${col.key}.cups`">
+                        <template #body="{ data }">
+                            {{ data[col.key].cups.toLocaleString("en-IN") }}
+                        </template>
+                    </Column>
                 </template>
                 <Column :key="col.label" v-for="col in appendCols">
                     <template #body="attrs">
                         <div class="text-nowrap">
                             {{
-                                col.value
+                                (col.value
                                     ? col.value(attrs)
                                     : attrs.data[col.field]
+                                ).toLocaleString("en-IN")
                             }}
                         </div>
                     </template>
@@ -111,11 +125,31 @@
                         <template v-for="col in displayReadings.cols">
                             <Column />
                             <Column />
-                            <Column
-                                :footer="displayReadings.reportTotals[col.key]"
-                            />
+                            <Column>
+                                <template #footer="attrs">
+                                    <div class="text-nowrap font-bold">
+                                        {{
+                                            displayReadings.reportTotals[
+                                                col.key
+                                            ].toLocaleString("en-IN")
+                                        }}
+                                    </div>
+                                </template>
+                            </Column>
                         </template>
-                        <Column :footer="displayReadings.reportTotals.total" />
+                        <Column v-for="col in appendCols">
+                            <template #footer="attrs">
+                                <div class="text-nowrap font-bold">
+                                    {{
+                                        col
+                                            .footerValue({
+                                                data: displayReadings.reportTotals,
+                                            })
+                                            .toLocaleString("en-IN")
+                                    }}
+                                </div>
+                            </template>
+                        </Column>
                     </Row>
                 </ColumnGroup>
                 <template #empty> No machines found. </template>
