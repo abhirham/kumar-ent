@@ -180,7 +180,7 @@ export default {
             appendCols: [
                 {
                     label: "Total Cups",
-                    value: ({ data }) => data.totalCups,
+                    field: "totalCups",
                     footerValue: ({ data }) => data.total,
                 },
             ],
