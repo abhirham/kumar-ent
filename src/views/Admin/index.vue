@@ -23,6 +23,7 @@
         <div class="max-w-full px-5">
             <Users v-if="active === 'Users'" />
             <Machines v-if="active === 'Machines'" />
+            <Reports v-if="active === 'Reports'" />
             <Readings v-if="active === 'Readings'" />
         </div>
     </div>
@@ -31,10 +32,11 @@
 <script>
 import Users from "@/views/Admin/Users.vue";
 import Machines from "./Machines.vue";
+import Reports from "./Reports.vue";
 import Readings from "./Readings.vue";
 
 export default {
-    components: { Users, Machines, Readings },
+    components: { Users, Machines, Reports, Readings },
     data() {
         return {
             active: "Users",
@@ -45,11 +47,15 @@ export default {
                 },
                 {
                     label: "Machines",
-                    icon: "pi pi-shop",
+                    icon: "pi pi-server",
                 },
                 {
                     label: "Readings",
-                    icon: "pi pi-warehouse",
+                    icon: "pi pi-receipt",
+                },
+                {
+                    label: "Reports",
+                    icon: "pi pi-book",
                 },
             ],
         };

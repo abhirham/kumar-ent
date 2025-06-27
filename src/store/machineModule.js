@@ -61,11 +61,32 @@ export default {
                     return arr;
                 });
         },
+        fetchReadingsByMachine(_, { startDate, endDate, machineID }) {
+            const startOfDay = moment(startDate).startOf("day").toDate();
+            const endOfDay = moment(endDate).endOf("day").toDate();
+
+            return db
+                .collection("readings")
+                .orderBy("machineId")
+                .orderBy("createdAt")
+                .where("machineId", "==", machineID)
+                .where("createdAt", ">=", startOfDay)
+                .where("createdAt", "<", endOfDay)
+                .get()
+                .then((res) => {
+                    let arr = [];
+
+                    res.forEach((x) => arr.push(x.data()));
+
+                    return arr;
+                });
+        },
         fetchLatestReadingsBydMachine({}, { machineID }) {
             return db
                 .collection("readings")
                 .where("machineId", "==", machineID)
                 .orderBy("createdAt", "desc")
+                .limit(1)
                 .get()
                 .then((res) => {
                     if (res.empty) return null;
@@ -114,18 +135,8 @@ export default {
                     return arr;
                 });
         },
-        // fetchMachineById({ commit }, { uid }) {
-        //     return db
-        //         .collection("machines")
-        //         .doc(`${uid}`)
-        //         .get()
-        //         .then((doc) => {
-        //             if (doc.exists) {
-        //                 return doc.data();
-        //             } else {
-        //                 throw { message: "Machine not found." };
-        //             }
-        //         });
-        // },
+        deleteReadingById({ commit, state }, { id }) {
+            return db.collection("readings").doc(id).delete();
+        },
     },
 };
