@@ -11,7 +11,29 @@
             :value="machines"
             :loading="loading"
             tableStyle="min-width: 50rem"
+            v-model:filters="filters"
+            :globalFilterFields="['id', 'location']"
         >
+            <template #header>
+                <div class="flex justify-end">
+                    <IconField>
+                        <InputIcon>
+                            <i class="pi pi-search" />
+                        </InputIcon>
+                        <InputText
+                            v-model="filters.global.value"
+                            placeholder="Search"
+                        />
+                        <InputIcon
+                            class="cursor-pointer"
+                            v-if="filters.global.value.length > 0"
+                            @click="() => (filters.global.value = '')"
+                        >
+                            <i class="pi pi-times" />
+                        </InputIcon>
+                    </IconField>
+                </div>
+            </template>
             <Column
                 v-for="col of columns"
                 :key="col.field"
@@ -47,6 +69,7 @@
 
 <script>
 import AddMachine from "./AddMachine.vue";
+import { FilterMatchMode } from "@primevue/core/api";
 
 export default {
     components: { AddMachine },
@@ -62,6 +85,9 @@ export default {
                 { field: "actions", header: "" },
             ],
             loading: false,
+            filters: {
+                global: { value: "", matchMode: FilterMatchMode.CONTAINS },
+            },
         };
     },
     computed: {
