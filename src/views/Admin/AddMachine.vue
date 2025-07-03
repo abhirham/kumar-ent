@@ -193,9 +193,11 @@ export default {
                     isUnique: helpers.withMessage(
                         "Machine already exists.",
                         (val) =>
-                            !this.$store.state.machineModule.machines.some(
-                                (x) => x.id === val
-                            )
+                            this.editMode
+                                ? true
+                                : !this.$store.state.machineModule.machines.some(
+                                      (x) => x.id === val
+                                  )
                     ),
                 },
                 products: {
@@ -215,21 +217,6 @@ export default {
                 ...this.machine.products,
                 { key: Date.now(), name: "", type: "Readings" },
             ];
-        },
-        validate() {
-            let arr = [];
-            let { id, products, location } = this.machine;
-
-            if (products.some((x) => !x.name))
-                arr.push("Products cannot be empty.");
-
-            this.errors = arr;
-
-            setTimeout(() => {
-                this.errors = [];
-            }, 4000);
-
-            return this.errors.length === 0;
         },
         async addMachine() {
             if (!(await this.v$.$validate())) return;
@@ -252,8 +239,8 @@ export default {
                 })
                 .finally(() => (this.loading = false));
         },
-        updateMachine() {
-            if (!this.validate()) return;
+        async updateMachine() {
+            if (!(await this.v$.$validate())) return;
 
             this.loading = true;
             Promise.all([
@@ -277,6 +264,7 @@ export default {
         dialog(val) {
             if (!val) {
                 this.machine = initialValues();
+                this.v$.$reset();
             }
 
             if (val && this.editMode) {
