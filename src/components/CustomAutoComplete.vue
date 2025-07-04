@@ -19,17 +19,19 @@ export default {
     computed: {
         value: {
             get() {
+                let key = this.optionValue ?? this.optionLabel;
+
+                if (key) {
+                    return this.items.find((x) => x[key] === this.modelValue);
+                }
                 return this.modelValue;
             },
             set(val) {
                 let value = val ?? "";
+                let key = this.optionValue ?? this.optionLabel;
 
-                if (!this.returnObject && typeof value === "object") {
-                    value = this.optionValue
-                        ? value[this.optionValue]
-                        : this.optionLabel
-                        ? value[this.optionLabel]
-                        : value;
+                if (!this.returnObject && typeof value === "object" && key) {
+                    value = value[key];
                 }
 
                 this.$emit("update:modelValue", value);
