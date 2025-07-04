@@ -12,10 +12,11 @@ export default {
     props: {
         modelValue: { required: true },
         items: { required: true, type: Array },
-        optionLabel: { type: String, default: "" },
-        optionValue: { type: String, default: "" },
+        optionLabel: { type: String, default: null },
+        optionValue: { type: String, default: null },
         returnObject: { type: Boolean, default: false },
     },
+    emits: ["update:modelValue"],
     computed: {
         value: {
             get() {
