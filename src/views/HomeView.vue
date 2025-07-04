@@ -251,6 +251,7 @@ export default {
     },
     mounted() {
         this.$store.dispatch("machineModule/fetchMachinesFromDB");
+        this.$store.dispatch("companyModule/fetchCompaniesFromDB");
     },
     watch: {
         machine(val) {
