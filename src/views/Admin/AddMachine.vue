@@ -205,7 +205,7 @@ export default {
             }));
         },
         productsInDB() {
-            return this.$store.state.machineModule.products;
+            return Object.values(this.$store.state.productModule.products);
         },
         companies() {
             return Object.values(this.$store.state.companyModule.companies);
@@ -265,7 +265,7 @@ export default {
                     products: this.productsToAdd,
                 }),
                 this.$store.dispatch(
-                    "machineModule/addProductsToDB",
+                    "productModule/updateProducts",
                     this.productsToAdd
                 ),
             ])
@@ -285,7 +285,7 @@ export default {
                     products: this.productsToAdd,
                 }),
                 this.$store.dispatch(
-                    "machineModule/addProductsToDB",
+                    "productModule/updateProducts",
                     this.productsToAdd
                 ),
             ])

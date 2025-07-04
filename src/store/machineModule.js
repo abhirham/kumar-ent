@@ -5,29 +5,14 @@ export default {
     name: "machineModule",
     namespaced: true,
     state: {
-        products: [],
         machines: [],
     },
     mutations: {
-        addProducts(state, payload) {
-            state.products = Object.values(
-                state.products
-                    .concat(payload)
-                    .reduce((acc, x) => ({ ...acc, [x.name]: x }), {})
-            );
-        },
         setMachines(state, payload) {
             state.machines = payload;
         },
     },
     actions: {
-        addProductsToDB({ commit }, payload) {
-            return db
-                .collection("products")
-                .doc("products")
-                .set({ products: arrayUnion(...payload) }, { merge: true })
-                .then((res) => commit("addProducts", payload));
-        },
         addReadings({ rootState }, payload) {
             let ref = db.collection("readings").doc();
 
@@ -92,21 +77,6 @@ export default {
                     if (res.empty) return null;
 
                     return res.docs[0].data();
-                });
-        },
-        fetchProducts({ commit }) {
-            return db
-                .collection("products")
-                .doc("products")
-                .get()
-                .then((res) => {
-                    if (!res.exists) return [];
-
-                    let arr = res.data().products;
-
-                    commit("addProducts", arr);
-
-                    return arr;
                 });
         },
         createMachineToDB({ commit }, payload) {

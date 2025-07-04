@@ -4,6 +4,7 @@ import userModule from "./userModule";
 import authModule from "./authModule";
 import machineModule from "./machineModule";
 import companyModule from "./companyModule";
+import productModule from "./productModule";
 
 // Create a new store instance.
 const store = createStore({
@@ -13,6 +14,7 @@ const store = createStore({
         authModule,
         machineModule,
         companyModule,
+        productModule,
     },
     state: {
         fullScreenLoader: true,
