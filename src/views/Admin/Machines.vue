@@ -45,6 +45,12 @@
                         data.products.map((x) => x.name).join(", ")
                     }}</span>
                 </template>
+                <template
+                    v-if="col.field === 'masterLocationId'"
+                    #body="{ data }"
+                >
+                    <span>{{ companies[data.masterLocationId].name }}</span>
+                </template>
                 <template v-if="col.field === 'actions'" #body="{ data }">
                     <Button
                         icon="pi pi-user-edit"
@@ -80,6 +86,7 @@ export default {
             machineToEdit: null,
             columns: [
                 { field: "id", header: "Machine #" },
+                { field: "masterLocationId", header: "Company" },
                 { field: "location", header: "Location" },
                 { field: "products", header: "Products" },
                 { field: "actions", header: "" },
@@ -93,6 +100,9 @@ export default {
     computed: {
         machines() {
             return this.$store.state.machineModule.machines;
+        },
+        companies() {
+            return this.$store.state.companyModule.companies;
         },
     },
     methods: {

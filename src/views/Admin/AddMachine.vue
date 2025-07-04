@@ -11,6 +11,31 @@
         <div class="flex flex-col gap-3 mb-5">
             <div class="flex flex-col gap-1">
                 <FloatLabel variant="in">
+                    <CustomAutoComplete
+                        v-model="machine.masterLocationId"
+                        inputId="in_label"
+                        dropdown
+                        optionLabel="name"
+                        optionValue="id"
+                        forceSelection
+                        :items="companies"
+                        fluid
+                        variant="filled"
+                    />
+                    <label for="in_label">Company</label>
+                </FloatLabel>
+                <Message
+                    v-if="v$.machine.masterLocationId.$error"
+                    severity="error"
+                    size="small"
+                    variant="simple"
+                    >{{
+                        v$.machine.masterLocationId.$errors[0].$message
+                    }}</Message
+                >
+            </div>
+            <div class="flex flex-col gap-1">
+                <FloatLabel variant="in">
                     <InputText
                         fluid
                         id="machineid"
@@ -146,7 +171,14 @@ function initialValues() {
         JSON.stringify({
             id: "",
             location: "",
-            products: [{ key: Date.now(), name: "", type: "Readings" }],
+            masterLocationId: "",
+            products: [
+                {
+                    key: Date.now(),
+                    name: "",
+                    type: "Readings",
+                },
+            ],
         })
     );
 }
@@ -175,6 +207,9 @@ export default {
         productsInDB() {
             return this.$store.state.machineModule.products;
         },
+        companies() {
+            return Object.values(this.$store.state.companyModule.companies);
+        },
     },
     data() {
         return {
@@ -188,6 +223,7 @@ export default {
         return {
             machine: {
                 location: { required },
+                masterLocationId: { required },
                 id: {
                     required,
                     isUnique: helpers.withMessage(
