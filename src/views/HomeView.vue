@@ -158,6 +158,9 @@ export default {
                 return false;
             }
         },
+        productsInDB() {
+            return this.$store.state.productModule.products;
+        },
     },
     methods: {
         updateCups(key) {
@@ -205,8 +208,28 @@ export default {
                     readings: this.readings,
                     createdAt: this.readingDate,
                     location: this.machine.location,
+                    masterLocationId: this.machine.masterLocationId,
                 })
                 .then((res) => {
+                    let updatedProducts = this.productsInDB;
+
+                    Object.values(this.readings).forEach((x) => {
+                        updatedProducts[x.name].rates =
+                            updatedProducts[x.name].rates ?? {};
+
+                        updatedProducts[x.name].rates[
+                            this.machine.masterLocationId
+                        ] =
+                            updatedProducts[x.name].rates[
+                                this.machine.masterLocationId
+                            ] ?? x.rate;
+                    });
+
+                    this.$store.dispatch(
+                        "productModule/updateProducts",
+                        updatedProducts
+                    );
+
                     this.previousReadingsByMachine[res.machineId] = res;
 
                     let state = initialState();
@@ -243,6 +266,9 @@ export default {
                     [name]: {
                         name,
                         opening_reading: this.previousReadingValue(name),
+                        rate: this.productsInDB[name].rates?.[
+                            value.masterLocationId
+                        ],
                     },
                 }),
                 {}
@@ -252,6 +278,7 @@ export default {
     mounted() {
         this.$store.dispatch("machineModule/fetchMachinesFromDB");
         this.$store.dispatch("companyModule/fetchCompaniesFromDB");
+        this.$store.dispatch("productModule/fetchProducts");
     },
     watch: {
         machine(val) {

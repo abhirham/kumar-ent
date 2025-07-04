@@ -198,11 +198,20 @@ export default {
                 this.$emit("update:modelValue", val);
             },
         },
-        productsToAdd() {
-            return this.machine.products.map(({ name, type }) => ({
-                name: name.trim().toUpperCase(),
-                type,
-            }));
+        productsObj() {
+            let updatedProducts = JSON.parse(
+                JSON.stringify(this.$store.state.productModule.products)
+            );
+            let productsToAdd = [];
+
+            this.machine.products.forEach(({ name, type }, idx) => {
+                name = name.trim().toUpperCase();
+                let obj = { name, type };
+                updatedProducts[name] = updatedProducts[name] ?? obj;
+                productsToAdd.push(obj);
+            });
+
+            return { updatedProducts, productsToAdd };
         },
         productsInDB() {
             return Object.values(this.$store.state.productModule.products);
@@ -262,11 +271,11 @@ export default {
             Promise.all([
                 this.$store.dispatch("machineModule/createMachineToDB", {
                     ...this.machine,
-                    products: this.productsToAdd,
+                    products: this.productsObj.productsToAdd,
                 }),
                 this.$store.dispatch(
                     "productModule/updateProducts",
-                    this.productsToAdd
+                    this.productsObj.updatedProducts
                 ),
             ])
                 .then((res) => {
@@ -282,11 +291,11 @@ export default {
             Promise.all([
                 this.$store.dispatch("machineModule/updateMachineToDB", {
                     ...this.machine,
-                    products: this.productsToAdd,
+                    products: this.productsObj.productsToAdd,
                 }),
                 this.$store.dispatch(
                     "productModule/updateProducts",
-                    this.productsToAdd
+                    this.productsObj.updatedProducts
                 ),
             ])
                 .then((res) => {

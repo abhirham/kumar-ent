@@ -75,9 +75,6 @@ export default {
             this.active = event.value;
         },
     },
-    mounted() {
-        this.$store.dispatch("machineModule/fetchProducts");
-    },
 };
 </script>
 
