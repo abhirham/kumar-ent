@@ -92,17 +92,28 @@
                 <template v-for="col in displayReadings.cols">
                     <Column :field="`${col.key}.opening`">
                         <template #body="{ data }">
-                            {{ data[col.key].opening.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.opening.toLocaleString(
+                                    "en-IN"
+                                ) ?? ""
+                            }}
                         </template>
                     </Column>
                     <Column :field="`${col.key}.closing`">
                         <template #body="{ data }">
-                            {{ data[col.key].closing.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.closing.toLocaleString(
+                                    "en-IN"
+                                ) ?? ""
+                            }}
                         </template>
                     </Column>
-                    <Column :field="`${col.key}.cups`">
+                    <Column>
                         <template #body="{ data }">
-                            {{ data[col.key].cups.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.cups.toLocaleString("en-IN") ??
+                                ""
+                            }}
                         </template>
                     </Column>
                 </template>
