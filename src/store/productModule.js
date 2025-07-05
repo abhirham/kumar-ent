@@ -16,7 +16,7 @@ export default {
             return db
                 .collection("products")
                 .doc("products")
-                .set({ products })
+                .set(products)
                 .then((res) => commit("setProducts", products));
         },
 
@@ -28,7 +28,7 @@ export default {
                 .then((res) => {
                     if (!res.exists) return {};
 
-                    return res.data().products;
+                    return res.data();
                 })
                 .then((res) => {
                     commit("setProducts", res);

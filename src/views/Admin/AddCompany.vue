@@ -5,9 +5,6 @@
         header="Add Company"
         :style="{ width: '25rem' }"
     >
-        <span class="text-surface-500 dark:text-surface-400 block mb-4"
-            >Enter Company information.</span
-        >
         <div class="flex flex-col gap-3 mb-5">
             <div class="flex flex-col gap-1">
                 <FloatLabel variant="in">
@@ -29,6 +26,49 @@
                     >{{ v$.company.name.$errors[0].$message }}</Message
                 >
             </div>
+            <template v-if="editMode">
+                <span class="text-surface-500 dark:text-surface-400 block"
+                    >Product Pricing</span
+                >
+                <div
+                    class="flex gap-1"
+                    v-for="(product, idx) in companyProducts"
+                >
+                    <div class="flex flex-col gap-1">
+                        <FloatLabel class="flex flex-1" variant="in">
+                            <CustomAutoComplete
+                                v-model="companyProducts[idx]"
+                                fluid
+                                optionLabel="name"
+                                :id="`product${idx}`"
+                                variant="filled"
+                                :items="productsInDB"
+                                return-object
+                                :showEmptyMessage="false"
+                            />
+                            <label :for="`product${idx}`">Product</label>
+                        </FloatLabel>
+                    </div>
+                    <div v-if="product.rates" class="flex flex-col gap-1">
+                        <FloatLabel class="flex flex-1" variant="in">
+                            <InputNumber
+                                v-model="product.rates[companyToEdit.id]"
+                                fluid
+                                :maxFractionDigits="2"
+                                :id="`productRate${idx}`"
+                                variant="filled"
+                            />
+                            <label :for="`productRate${idx}`">Rate</label>
+                        </FloatLabel>
+                    </div>
+                </div>
+                <Button
+                    type="button"
+                    icon="pi pi-plus"
+                    severity="primary"
+                    @click="companyProducts.push('')"
+                ></Button>
+            </template>
         </div>
 
         <div class="flex justify-end gap-2">
@@ -43,7 +83,7 @@
                 type="button"
                 label="Update"
                 :loading="loading"
-                @click="updateCompany"
+                @click="updateProducts"
             ></Button>
             <Button
                 v-else
@@ -84,11 +124,19 @@ export default {
                 this.$emit("update:modelValue", val);
             },
         },
+        productsInDB() {
+            return Object.values(
+                JSON.parse(
+                    JSON.stringify(this.$store.state.productModule.products)
+                )
+            );
+        },
     },
     data() {
         return {
             company: initialValues(),
             loading: false,
+            companyProducts: [],
         };
     },
     validations() {
@@ -112,12 +160,26 @@ export default {
                 })
                 .finally(() => (this.loading = false));
         },
-        async updateCompany() {
-            if (!(await this.v$.$validate())) return;
+        async updateProducts() {
+            let filtered = this.companyProducts.filter((p) => {
+                return (
+                    this.$store.state.productModule.products[p.name].rates[
+                        this.companyToEdit.id
+                    ] !== p.rates[this.companyToEdit.id]
+                );
+            });
 
+            if (filtered.length === 0) return;
             this.loading = true;
-            this.$store
-                .dispatch("companyModule/updateCompanyToDB", this.company)
+
+            let updatedObj = JSON.parse(
+                JSON.stringify(this.$store.state.productModule.products)
+            );
+
+            filtered.forEach((x) => (updatedObj[x.name] = x));
+
+            return this.$store
+                .dispatch("productModule/updateProducts", updatedObj)
                 .then((res) => {
                     this.dialog = false;
                     this.$emit("editComplete");
@@ -140,6 +202,16 @@ export default {
                 );
 
                 this.company = JSON.parse(JSON.stringify(obj));
+
+                this.companyProducts = JSON.parse(
+                    JSON.stringify(
+                        Object.values(
+                            this.$store.state.productModule.products
+                        ).filter(
+                            (x) => x.rates?.[this.companyToEdit.id] ?? false
+                        )
+                    )
+                );
             }
         },
     },

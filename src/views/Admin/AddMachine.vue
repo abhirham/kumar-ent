@@ -206,7 +206,7 @@ export default {
 
             this.machine.products.forEach(({ name, type }, idx) => {
                 name = name.trim().toUpperCase();
-                let obj = { name, type };
+                let obj = { name, type, rates: {} };
                 updatedProducts[name] = updatedProducts[name] ?? obj;
                 productsToAdd.push(obj);
             });

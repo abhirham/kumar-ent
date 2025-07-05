@@ -48,8 +48,8 @@
                 <template v-if="col.field === 'actions'" #body="{ data }">
                     <Button
                         icon="pi pi-user-edit"
-                        variant="text"
-                        rounded
+                        label="Edit Product Pricing"
+                        size="small"
                         @click="onEdit(data)"
                         aria-label="Filter"
                     />
@@ -78,7 +78,10 @@ export default {
             showAddCompany: false,
             showEditCompany: false,
             companyToEdit: null,
-            columns: [{ field: "name", header: "Company" }],
+            columns: [
+                { field: "name", header: "Company" },
+                { field: "actions", header: "" },
+            ],
             loading: false,
             filters: {
                 global: { value: "", matchMode: FilterMatchMode.CONTAINS },
