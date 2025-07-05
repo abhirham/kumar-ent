@@ -21,10 +21,14 @@ export default {
         value: {
             get() {
                 let key = this.optionValue ?? this.optionLabel;
+                let val = this.returnObject
+                    ? this.modelValue?.[key]
+                    : this.modelValue;
 
                 if (key) {
-                    return this.items.find((x) => x[key] === this.modelValue);
+                    return this.items.find((x) => x[key] === val);
                 }
+
                 return this.modelValue;
             },
             set(val) {
