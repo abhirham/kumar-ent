@@ -12,24 +12,31 @@ export default {
     props: {
         modelValue: { required: true },
         items: { required: true, type: Array },
-        optionLabel: { type: String, default: "" },
-        optionValue: { type: String, default: "" },
+        optionLabel: { type: String, default: null },
+        optionValue: { type: String, default: null },
         returnObject: { type: Boolean, default: false },
     },
+    emits: ["update:modelValue"],
     computed: {
         value: {
             get() {
+                let key = this.optionValue ?? this.optionLabel;
+                let val = this.returnObject
+                    ? this.modelValue?.[key]
+                    : this.modelValue;
+
+                if (key) {
+                    return this.items.find((x) => x[key] === val);
+                }
+
                 return this.modelValue;
             },
             set(val) {
                 let value = val ?? "";
+                let key = this.optionValue ?? this.optionLabel;
 
-                if (!this.returnObject && typeof value === "object") {
-                    value = this.optionValue
-                        ? value[this.optionValue]
-                        : this.optionLabel
-                        ? value[this.optionLabel]
-                        : value;
+                if (!this.returnObject && typeof value === "object" && key) {
+                    value = value[key];
                 }
 
                 this.$emit("update:modelValue", value);

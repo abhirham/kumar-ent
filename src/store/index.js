@@ -3,10 +3,19 @@ import notificationModule from "./notificationModule";
 import userModule from "./userModule";
 import authModule from "./authModule";
 import machineModule from "./machineModule";
+import companyModule from "./companyModule";
+import productModule from "./productModule";
 
 // Create a new store instance.
 const store = createStore({
-    modules: { notificationModule, userModule, authModule, machineModule },
+    modules: {
+        notificationModule,
+        userModule,
+        authModule,
+        machineModule,
+        companyModule,
+        productModule,
+    },
     state: {
         fullScreenLoader: true,
     },

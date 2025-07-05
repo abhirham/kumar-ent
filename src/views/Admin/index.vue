@@ -23,6 +23,7 @@
         <div class="max-w-full px-5">
             <Users v-if="active === 'Users'" />
             <Machines v-if="active === 'Machines'" />
+            <Companies v-if="active === 'Companies'" />
             <Reports v-if="active === 'Reports'" />
             <Readings v-if="active === 'Readings'" />
         </div>
@@ -32,11 +33,12 @@
 <script>
 import Users from "@/views/Admin/Users.vue";
 import Machines from "./Machines.vue";
+import Companies from "./Companies.vue";
 import Reports from "./Reports.vue";
 import Readings from "./Readings.vue";
 
 export default {
-    components: { Users, Machines, Reports, Readings },
+    components: { Users, Machines, Reports, Readings, Companies },
     data() {
         return {
             active: "Users",
@@ -44,6 +46,10 @@ export default {
                 {
                     label: "Users",
                     icon: "pi pi-users",
+                },
+                {
+                    label: "Companies",
+                    icon: "pi pi-warehouse",
                 },
                 {
                     label: "Machines",
@@ -68,9 +74,6 @@ export default {
 
             this.active = event.value;
         },
-    },
-    mounted() {
-        this.$store.dispatch("machineModule/fetchProducts");
     },
 };
 </script>

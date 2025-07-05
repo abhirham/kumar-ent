@@ -23,10 +23,24 @@
                 />
                 <label>End Date</label>
             </FloatLabel>
+            <FloatLabel variant="in">
+                <CustomAutoComplete
+                    v-model="company"
+                    inputId="in_label"
+                    dropdown
+                    optionLabel="name"
+                    returnObject
+                    forceSelection
+                    :items="companies"
+                    fluid
+                    variant="filled"
+                />
+                <label for="in_label">Company</label>
+            </FloatLabel>
 
             <Button
                 type="button"
-                :disabled="!(this.startDate && this.endDate)"
+                :disabled="!(this.startDate && this.endDate && company)"
                 :loading="loading"
                 @click="fetchReadings"
                 label="Generate"
@@ -92,17 +106,28 @@
                 <template v-for="col in displayReadings.cols">
                     <Column :field="`${col.key}.opening`">
                         <template #body="{ data }">
-                            {{ data[col.key].opening.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.opening.toLocaleString(
+                                    "en-IN"
+                                ) ?? ""
+                            }}
                         </template>
                     </Column>
                     <Column :field="`${col.key}.closing`">
                         <template #body="{ data }">
-                            {{ data[col.key].closing.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.closing.toLocaleString(
+                                    "en-IN"
+                                ) ?? ""
+                            }}
                         </template>
                     </Column>
-                    <Column :field="`${col.key}.cups`">
+                    <Column>
                         <template #body="{ data }">
-                            {{ data[col.key].cups.toLocaleString("en-IN") }}
+                            {{
+                                data[col.key]?.cups.toLocaleString("en-IN") ??
+                                ""
+                            }}
                         </template>
                     </Column>
                 </template>
@@ -169,6 +194,7 @@ export default {
             startDate: new Date(),
             endDate: new Date(),
             maxDate: new Date(),
+            company: null,
             prependCols: [
                 { label: "#", value: ({ index }) => index + 1 },
                 { label: "Location", field: "location", footerText: "Totals" },
@@ -188,6 +214,9 @@ export default {
     computed: {
         machines() {
             return this.$store.state.machineModule.machines;
+        },
+        companies() {
+            return Object.values(this.$store.state.companyModule.companies);
         },
         displayReadings() {
             let rows = {};
@@ -334,7 +363,7 @@ export default {
             // The download logic is already good, just using the cleaner variable.
             const startDate = moment(this.startDate).format("YYYY-MM-DD");
             const endDate = moment(this.endDate).format("YYYY-MM-DD");
-            const fileName = `Report (${startDate} to ${endDate}).tsv`;
+            const fileName = `${this.company.name} - Report (${startDate} to ${endDate}).tsv`;
 
             const link = document.createElement("a");
             link.href =
@@ -361,6 +390,7 @@ export default {
                 .dispatch("machineModule/fetchReadings", {
                     startDate: this.startDate,
                     endDate: this.endDate,
+                    company: this.company.id,
                 })
                 .then((res) => {
                     let arr = [];

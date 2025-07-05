@@ -2,17 +2,17 @@
     <div class="flex flex-col">
         <Button
             class="self-end mb-5"
-            @click="showAddMachine = true"
-            label="Add Machine"
+            @click="showAddCompany = true"
+            label="Add Company"
         ></Button>
         <DataTable
             scrollable
             scrollHeight="80vh"
-            :value="machines"
+            :value="companies"
             :loading="loading"
             tableStyle="min-width: 50rem"
             v-model:filters="filters"
-            :globalFilterFields="['id', 'location']"
+            :globalFilterFields="['name']"
         >
             <template #header>
                 <div class="flex justify-end">
@@ -45,50 +45,41 @@
                         data.products.map((x) => x.name).join(", ")
                     }}</span>
                 </template>
-                <template
-                    v-if="col.field === 'masterLocationId'"
-                    #body="{ data }"
-                >
-                    <span>{{ companies[data.masterLocationId].name }}</span>
-                </template>
                 <template v-if="col.field === 'actions'" #body="{ data }">
                     <Button
                         icon="pi pi-user-edit"
-                        variant="text"
-                        rounded
+                        label="Edit Product Pricing"
+                        size="small"
                         @click="onEdit(data)"
                         aria-label="Filter"
                     />
                 </template>
             </Column>
-            <template #empty> No machines found. </template>
+            <template #empty> No Companies found. </template>
         </DataTable>
     </div>
-    <AddMachine v-model="showAddMachine" @complete="getMachines" />
-    <AddMachine
-        v-model="showEditMachine"
+    <AddCompany v-model="showAddCompany" @complete="getCompanies" />
+    <AddCompany
+        v-model="showEditCompany"
         :editMode="true"
-        :machineToEdit="machineToEdit"
+        :companyToEdit="companyToEdit"
         @editComplete="onEditComplete"
     />
 </template>
 
 <script>
-import AddMachine from "./AddMachine.vue";
+import AddCompany from "./AddCompany.vue";
 import { FilterMatchMode } from "@primevue/core/api";
 
 export default {
-    components: { AddMachine },
+    components: { AddCompany },
     data() {
         return {
-            showAddMachine: false,
-            showEditMachine: false,
-            machineToEdit: null,
+            showAddCompany: false,
+            showEditCompany: false,
+            companyToEdit: null,
             columns: [
-                { field: "id", header: "Machine #" },
-                { field: "masterLocationId", header: "Company" },
-                { field: "location", header: "Location" },
-                { field: "products", header: "Products" },
+                { field: "name", header: "Company" },
                 { field: "actions", header: "" },
             ],
             loading: false,
@@ -98,24 +89,21 @@ export default {
         };
     },
     computed: {
-        machines() {
-            return this.$store.state.machineModule.machines;
-        },
         companies() {
-            return this.$store.state.companyModule.companies;
+            return Object.values(this.$store.state.companyModule.companies);
         },
     },
     methods: {
         onEdit(val) {
-            this.machineToEdit = val;
-            this.showEditMachine = true;
+            this.companyToEdit = val;
+            this.showEditCompany = true;
         },
         onEditComplete() {
-            this.machineToEdit = null;
-            this.getMachines();
+            this.companyToEdit = null;
+            this.getCompanies();
         },
-        getMachines() {
-            return this.$store.dispatch("machineModule/fetchMachinesFromDB");
+        getCompanies() {
+            return this.$store.dispatch("companyModule/fetchCompaniesFromDB");
         },
     },
 };
