@@ -27,7 +27,7 @@ export default {
                 .set(payload)
                 .then((res) => ref.get().then((res) => res.data()));
         },
-        fetchReadings(_, { startDate, endDate }) {
+        fetchReadings(_, { startDate, endDate, company }) {
             const startOfDay = moment(startDate).startOf("day").toDate();
             const endOfDay = moment(endDate).endOf("day").toDate();
 
@@ -37,6 +37,7 @@ export default {
                 .orderBy("createdAt")
                 .where("createdAt", ">=", startOfDay)
                 .where("createdAt", "<", endOfDay)
+                .where("masterLocationId", "==", company)
                 .get()
                 .then((res) => {
                     let arr = [];
