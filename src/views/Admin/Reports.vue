@@ -47,11 +47,11 @@
             ></Button>
         </div>
         <template v-if="readings === null"></template>
-        <div v-else-if="readings.length === 0">No readings found.</div>
+        <div v-else-if="readings.rows.length === 0">No readings found.</div>
         <div v-else class="container overflow-auto">
             <Button @click="exportCSV" class="mb-5">Export CSV</Button>
             <DataTable
-                :value="displayReadings.rows"
+                :value="readings.rows"
                 scrollable
                 scrollHeight="70vh"
                 stripedRows
@@ -66,10 +66,7 @@
                             :rowspan="2"
                         ></Column>
 
-                        <Column
-                            v-for="col in displayReadings.cols"
-                            :colspan="3"
-                        >
+                        <Column v-for="col in readings.cols" :colspan="3">
                             <template #header>
                                 <div class="text-center w-full font-semibold">
                                     {{ col.display }}
@@ -84,7 +81,7 @@
                         ></Column>
                     </Row>
                     <Row>
-                        <template v-for="col in displayReadings.cols">
+                        <template v-for="col in readings.cols">
                             <Column header="Opening"></Column>
                             <Column header="Closing"></Column>
                             <Column header="Cups"></Column>
@@ -103,7 +100,7 @@
                         </div>
                     </template>
                 </Column>
-                <template v-for="col in displayReadings.cols">
+                <template v-for="col in readings.cols">
                     <Column :field="`${col.key}.opening`">
                         <template #body="{ data }">
                             {{
@@ -147,14 +144,14 @@
                     <Row>
                         <Column footer="Totals:" />
                         <Column v-for="(col, idx) in prependCols.slice(1)" />
-                        <template v-for="col in displayReadings.cols">
+                        <template v-for="col in readings.cols">
                             <Column />
                             <Column />
                             <Column>
                                 <template #footer="attrs">
                                     <div class="text-nowrap font-bold">
                                         {{
-                                            displayReadings.reportTotals[
+                                            readings.reportTotals[
                                                 col.key
                                             ].toLocaleString("en-IN")
                                         }}
@@ -168,7 +165,7 @@
                                     {{
                                         col
                                             .footerValue({
-                                                data: displayReadings.reportTotals,
+                                                data: readings.reportTotals,
                                             })
                                             .toLocaleString("en-IN")
                                     }}
@@ -218,13 +215,15 @@ export default {
         companies() {
             return Object.values(this.$store.state.companyModule.companies);
         },
-        displayReadings() {
+    },
+    methods: {
+        generateDisplayReadings(readings) {
             let rows = {};
             let cols = {};
             let reportTotals = { total: 0 };
             let count = 0;
 
-            this.readings.forEach((r) => {
+            readings.forEach((r) => {
                 let key = `${r.machineId}-${r.location}-${count}`;
 
                 Object.values(r.readings).some((v) => {
@@ -279,21 +278,19 @@ export default {
                 // }, 0);
             });
 
-            return {
+            this.readings = {
                 rows: Object.values(rows),
                 cols: Object.values(cols),
                 reportTotals,
             };
         },
-    },
-    methods: {
         exportCSV() {
             // Destructure for easier access and less repetition.
             const {
                 cols: columnDefs,
                 rows: dataRows,
                 reportTotals,
-            } = this.displayReadings;
+            } = this.readings;
 
             // --- 1. Build Header Rows ---
 
@@ -399,7 +396,7 @@ export default {
                         arr.push(x);
                     });
 
-                    this.readings = arr;
+                    this.generateDisplayReadings(arr);
                 })
                 .finally(() => (this.loading = false));
         },
