@@ -38,21 +38,28 @@
                 </div>
                 <FloatLabel class="flex-1 min-w-25" variant="in">
                     <InputNumber
+                        :invalid="v$.readings[key].opening_reading.$error"
                         v-model="p.opening_reading"
                         inputId="withoutgrouping"
                         :useGrouping="false"
                         @update:modelValue="updateCups(key)"
                         fluid
                     />
+                    <Message
+                        v-if="v$.readings[key].opening_reading.$error"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                        >{{
+                            v$.readings[key].opening_reading.$errors[0].$message
+                        }}</Message
+                    >
                     <label for="withoutgrouping">Open Reading</label>
                 </FloatLabel>
 
                 <FloatLabel class="flex-1 min-w-25" variant="in">
                     <InputNumber
-                        :invalid="
-                            errorMessages[`${p.name}-closing_reading`] !==
-                            undefined
-                        "
+                        :invalid="v$.readings[key].closing_reading.$error"
                         v-model="p.closing_reading"
                         inputId="withoutgrouping"
                         name="closing_reading"
@@ -61,19 +68,19 @@
                         fluid
                     />
                     <Message
-                        v-if="errorMessages[`${p.name}-closing_reading`]"
+                        v-if="v$.readings[key].closing_reading.$error"
                         severity="error"
                         size="small"
                         variant="simple"
                         >{{
-                            errorMessages[`${p.name}-closing_reading`]
+                            v$.readings[key].closing_reading.$errors[0].$message
                         }}</Message
                     >
                     <label for="withoutgrouping">Closing Reading</label>
                 </FloatLabel>
                 <FloatLabel class="flex-1 min-w-25" variant="in">
                     <InputNumber
-                        :invalid="errorMessages[`${p.name}-cups`] !== undefined"
+                        :invalid="v$.readings[key].cups.$error"
                         v-model="p.cups"
                         inputId="withoutgrouping"
                         name="cups"
@@ -81,17 +88,19 @@
                         fluid
                     />
                     <Message
-                        v-if="errorMessages[`${p.name}-cups`]"
+                        v-if="v$.readings[key].cups.$error"
                         severity="error"
                         size="small"
                         variant="simple"
-                        >{{ errorMessages[`${p.name}-cups`] }}</Message
+                        >{{
+                            v$.readings[key].cups.$errors[0].$message
+                        }}</Message
                     >
                     <label for="withoutgrouping"># of cups</label>
                 </FloatLabel>
                 <FloatLabel class="flex-1 min-w-25" variant="in">
                     <InputNumber
-                        :invalid="errorMessages[`${p.name}-rate`] !== undefined"
+                        :invalid="v$.readings[key].rate.$error"
                         v-model="p.rate"
                         inputId="withoutgrouping"
                         name="rate"
@@ -100,11 +109,13 @@
                         fluid
                     />
                     <Message
-                        v-if="errorMessages[`${p.name}-rate`]"
+                        v-if="v$.readings[key].rate.$error"
                         severity="error"
                         size="small"
                         variant="simple"
-                        >{{ errorMessages[`${p.name}-rate`] }}</Message
+                        >{{
+                            v$.readings[key].rate.$errors[0].$message
+                        }}</Message
                     >
                     <label for="withoutgrouping">Rate</label>
                 </FloatLabel>
@@ -122,6 +133,8 @@
 <script>
 import moment from "moment";
 import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
+import { useVuelidate } from "@vuelidate/core";
+import { required, helpers, minValue } from "@vuelidate/validators";
 
 const initialState = () =>
     JSON.parse(
@@ -134,6 +147,9 @@ const initialState = () =>
     );
 
 export default {
+    setup() {
+        return { v$: useVuelidate() };
+    },
     components: { CustomAutoComplete },
     data() {
         return {
@@ -141,6 +157,9 @@ export default {
             loading: false,
             previousReadingsByMachine: {},
         };
+    },
+    validations() {
+        return this.validationRules;
     },
     computed: {
         machines() {
@@ -161,32 +180,40 @@ export default {
         productsInDB() {
             return this.$store.state.productModule.products;
         },
+        validationRules() {
+            return {
+                readings: {
+                    ...Object.keys(this.readings).reduce(
+                        (acc, x) => ({
+                            ...acc,
+                            [x]: {
+                                opening_reading: {
+                                    required,
+                                    minValue: minValue(0),
+                                },
+                                closing_reading: {
+                                    required,
+                                    minValue: helpers.withMessage(
+                                        "Closing Reading must be greater than Opening Reading.",
+                                        minValue(
+                                            this.readings[x].opening_reading
+                                        )
+                                    ),
+                                },
+                                rate: { required },
+                                cups: { required, minValue: minValue(0) },
+                            },
+                        }),
+                        {}
+                    ),
+                },
+            };
+        },
     },
     methods: {
         updateCups(key) {
             let obj = this.readings[key];
             obj.cups = (obj.closing_reading || 0) - (obj.opening_reading || 0);
-        },
-        validate() {
-            let obj = {};
-
-            Object.values(this.readings).forEach((x) => {
-                ["closing_reading", "rate"].forEach((y) => {
-                    if ((x[y] ?? null) === null)
-                        obj[x.name + `-${y}`] = "This field is required.";
-                });
-
-                if (
-                    x.closing_reading < x.opening_reading &&
-                    !obj[x.name + `-closing_reading`]
-                )
-                    obj[x.name + `-closing_reading`] =
-                        "Closing Reading must be greater than Opening Reading.";
-            });
-
-            this.errorMessages = obj;
-
-            return Object.keys(obj).length === 0;
         },
         previousReadingValue(productName) {
             try {
@@ -197,8 +224,8 @@ export default {
                 return 0;
             }
         },
-        save() {
-            if (!this.validate()) return;
+        async save() {
+            if (!(await this.v$.$validate())) return;
 
             this.loading = true;
 
@@ -244,6 +271,7 @@ export default {
         },
 
         async onMachineChange({ value }) {
+            this.v$.$reset();
             if (!this.previousReadingsByMachine[value.id]) {
                 this.$store.commit("setFullScreenLoader", true);
                 await this.$store
