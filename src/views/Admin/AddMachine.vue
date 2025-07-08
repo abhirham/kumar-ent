@@ -9,12 +9,16 @@
             >Enter machine information.</span
         >
         <div class="flex flex-col gap-3 mb-5">
-            <div class="flex flex-col gap-1">
+            <WithError
+                v-slot="{ invalid }"
+                :error="v$.machine.masterLocationId"
+            >
                 <FloatLabel variant="in">
                     <CustomAutoComplete
                         v-model="machine.masterLocationId"
                         inputId="in_label"
                         dropdown
+                        :invalid="invalid"
                         optionLabel="name"
                         optionValue="id"
                         forceSelection
@@ -24,62 +28,44 @@
                     />
                     <label for="in_label">Company</label>
                 </FloatLabel>
-                <Message
-                    v-if="v$.machine.masterLocationId.$error"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                    >{{
-                        v$.machine.masterLocationId.$errors[0].$message
-                    }}</Message
-                >
-            </div>
-            <div class="flex flex-col gap-1">
+            </WithError>
+            <WithError v-slot="{ invalid }" :error="v$.machine.id">
                 <FloatLabel variant="in">
                     <InputText
                         fluid
                         id="machineid"
                         :useGrouping="false"
                         :disabled="editMode"
-                        :invalid="v$.machine.id.$error"
+                        :invalid="invalid"
                         v-model="machine.id"
                         variant="filled"
                     />
                     <label for="machineid">Machine #</label>
                 </FloatLabel>
-                <Message
-                    v-if="v$.machine.id.$error"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                    >{{ v$.machine.id.$errors[0].$message }}</Message
-                >
-            </div>
-            <div class="flex flex-col gap-1">
+            </WithError>
+            <WithError v-slot="{ invalid }" :error="v$.machine.location">
                 <FloatLabel variant="in">
                     <InputText
                         fluid
                         id="machineLoc"
-                        :invalid="v$.machine.location.$error"
+                        :invalid="invalid"
                         v-model="machine.location"
                         variant="filled"
                     />
                     <label for="machineLoc">Location</label>
                 </FloatLabel>
-                <Message
-                    v-if="v$.machine.location.$error"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                    >{{ v$.machine.location.$errors[0].$message }}</Message
-                >
-            </div>
+            </WithError>
             <div
                 class="flex gap-3 grow"
                 v-for="(p, idx) in machine.products"
                 :key="p.key"
             >
-                <div class="flex flex-col gap-1">
+                <WithError
+                    v-slot="{ invalid }"
+                    :errorArr="
+                        v$.machine.products.$each.$response.$errors[idx].name
+                    "
+                >
                     <FloatLabel class="flex flex-1" variant="in">
                         <CustomAutoComplete
                             v-model="machine.products[idx].name"
@@ -87,25 +73,14 @@
                             optionLabel="name"
                             :id="`product${idx}`"
                             variant="filled"
-                            :invalid="
-                                v$.machine.products.$each.$response.$errors[idx]
-                                    .name.length > 0
-                            "
+                            :invalid="invalid"
                             :items="productsInDB"
                             :showEmptyMessage="false"
                             @item-select="(e) => onProductSelect(e.value, idx)"
                         />
                         <label :for="`product${idx}`">Product Name</label>
                     </FloatLabel>
-                    <Message
-                        v-for="error in v$.machine.products.$each.$response
-                            .$errors[idx].name"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                        >{{ error.$message }}</Message
-                    >
-                </div>
+                </WithError>
                 <FloatLabel variant="in" v-if="false">
                     <Select
                         v-model="machine.products[idx].type"
@@ -163,6 +138,7 @@
 
 <script>
 import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
+import WithError from "@/components/WithError.vue";
 import { useVuelidate } from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
 
