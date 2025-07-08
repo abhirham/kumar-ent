@@ -36,78 +36,65 @@
                 <div>
                     {{ p.name }}
                 </div>
-                <FloatLabel class="flex-1 min-w-25" variant="in">
-                    <InputNumber
-                        v-model="p.opening_reading"
-                        inputId="withoutgrouping"
-                        :useGrouping="false"
-                        @update:modelValue="updateCups(key)"
-                        fluid
-                    />
-                    <label for="withoutgrouping">Open Reading</label>
-                </FloatLabel>
-
-                <FloatLabel class="flex-1 min-w-25" variant="in">
-                    <InputNumber
-                        :invalid="
-                            errorMessages[`${p.name}-closing_reading`] !==
-                            undefined
-                        "
-                        v-model="p.closing_reading"
-                        inputId="withoutgrouping"
-                        name="closing_reading"
-                        :useGrouping="false"
-                        @update:modelValue="updateCups(key)"
-                        fluid
-                    />
-                    <Message
-                        v-if="errorMessages[`${p.name}-closing_reading`]"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                        >{{
-                            errorMessages[`${p.name}-closing_reading`]
-                        }}</Message
-                    >
-                    <label for="withoutgrouping">Closing Reading</label>
-                </FloatLabel>
-                <FloatLabel class="flex-1 min-w-25" variant="in">
-                    <InputNumber
-                        :invalid="errorMessages[`${p.name}-cups`] !== undefined"
-                        v-model="p.cups"
-                        inputId="withoutgrouping"
-                        name="cups"
-                        :useGrouping="false"
-                        fluid
-                    />
-                    <Message
-                        v-if="errorMessages[`${p.name}-cups`]"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                        >{{ errorMessages[`${p.name}-cups`] }}</Message
-                    >
-                    <label for="withoutgrouping"># of cups</label>
-                </FloatLabel>
-                <FloatLabel class="flex-1 min-w-25" variant="in">
-                    <InputNumber
-                        :invalid="errorMessages[`${p.name}-rate`] !== undefined"
-                        v-model="p.rate"
-                        inputId="withoutgrouping"
-                        name="rate"
-                        :useGrouping="false"
-                        :maxFractionDigits="3"
-                        fluid
-                    />
-                    <Message
-                        v-if="errorMessages[`${p.name}-rate`]"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                        >{{ errorMessages[`${p.name}-rate`] }}</Message
-                    >
-                    <label for="withoutgrouping">Rate</label>
-                </FloatLabel>
+                <WithError
+                    v-slot="{ invalid }"
+                    :error="v$.readings[key].opening_reading"
+                >
+                    <FloatLabel class="flex-1 min-w-25" variant="in">
+                        <InputNumber
+                            :invalid="invalid"
+                            v-model="p.opening_reading"
+                            inputId="withoutgrouping"
+                            :useGrouping="false"
+                            @update:modelValue="updateCups(key)"
+                            fluid
+                        />
+                        <label for="withoutgrouping">Open Reading</label>
+                    </FloatLabel>
+                </WithError>
+                <WithError
+                    v-slot="{ invalid }"
+                    :error="v$.readings[key].closing_reading"
+                >
+                    <FloatLabel class="flex-1 min-w-25" variant="in">
+                        <InputNumber
+                            :invalid="invalid"
+                            v-model="p.closing_reading"
+                            inputId="withoutgrouping"
+                            name="closing_reading"
+                            :useGrouping="false"
+                            @update:modelValue="updateCups(key)"
+                            fluid
+                        />
+                        <label for="withoutgrouping">Closing Reading</label>
+                    </FloatLabel>
+                </WithError>
+                <WithError v-slot="{ invalid }" :error="v$.readings[key].cups">
+                    <FloatLabel class="flex-1 min-w-25" variant="in">
+                        <InputNumber
+                            :invalid="invalid"
+                            v-model="p.cups"
+                            inputId="withoutgrouping"
+                            name="cups"
+                            :useGrouping="false"
+                            fluid
+                        />
+                        <label for="withoutgrouping"># of cups</label>
+                    </FloatLabel>
+                </WithError>
+                <WithError v-slot="{ invalid }" :error="v$.readings[key].rate">
+                    <FloatLabel class="flex-1 min-w-25" variant="in">
+                        <InputNumber
+                            :invalid="invalid"
+                            v-model="p.rate"
+                            inputId="withoutgrouping"
+                            name="rate"
+                            :useGrouping="false"
+                            :maxFractionDigits="3"
+                            fluid
+                        />
+                    </FloatLabel>
+                </WithError>
             </div>
         </template>
         <Button
@@ -122,6 +109,9 @@
 <script>
 import moment from "moment";
 import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
+import { useVuelidate } from "@vuelidate/core";
+import { required, helpers, minValue } from "@vuelidate/validators";
+import WithError from "@/components/WithError.vue";
 
 const initialState = () =>
     JSON.parse(
@@ -134,6 +124,9 @@ const initialState = () =>
     );
 
 export default {
+    setup() {
+        return { v$: useVuelidate() };
+    },
     components: { CustomAutoComplete },
     data() {
         return {
@@ -141,6 +134,9 @@ export default {
             loading: false,
             previousReadingsByMachine: {},
         };
+    },
+    validations() {
+        return this.validationRules;
     },
     computed: {
         machines() {
@@ -161,32 +157,40 @@ export default {
         productsInDB() {
             return this.$store.state.productModule.products;
         },
+        validationRules() {
+            return {
+                readings: {
+                    ...Object.keys(this.readings).reduce(
+                        (acc, x) => ({
+                            ...acc,
+                            [x]: {
+                                opening_reading: {
+                                    required,
+                                    minValue: minValue(0),
+                                },
+                                closing_reading: {
+                                    required,
+                                    minValue: helpers.withMessage(
+                                        "Must be greater than Opening Reading.",
+                                        minValue(
+                                            this.readings[x].opening_reading
+                                        )
+                                    ),
+                                },
+                                rate: { required },
+                                cups: { required, minValue: minValue(0) },
+                            },
+                        }),
+                        {}
+                    ),
+                },
+            };
+        },
     },
     methods: {
         updateCups(key) {
             let obj = this.readings[key];
             obj.cups = (obj.closing_reading || 0) - (obj.opening_reading || 0);
-        },
-        validate() {
-            let obj = {};
-
-            Object.values(this.readings).forEach((x) => {
-                ["closing_reading", "rate"].forEach((y) => {
-                    if ((x[y] ?? null) === null)
-                        obj[x.name + `-${y}`] = "This field is required.";
-                });
-
-                if (
-                    x.closing_reading < x.opening_reading &&
-                    !obj[x.name + `-closing_reading`]
-                )
-                    obj[x.name + `-closing_reading`] =
-                        "Closing Reading must be greater than Opening Reading.";
-            });
-
-            this.errorMessages = obj;
-
-            return Object.keys(obj).length === 0;
         },
         previousReadingValue(productName) {
             try {
@@ -197,8 +201,8 @@ export default {
                 return 0;
             }
         },
-        save() {
-            if (!this.validate()) return;
+        async save() {
+            if (!(await this.v$.$validate())) return;
 
             this.loading = true;
 
@@ -244,6 +248,7 @@ export default {
         },
 
         async onMachineChange({ value }) {
+            this.v$.$reset();
             if (!this.previousReadingsByMachine[value.id]) {
                 this.$store.commit("setFullScreenLoader", true);
                 await this.$store

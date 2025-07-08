@@ -6,26 +6,19 @@
         :style="{ width: '25rem' }"
     >
         <div class="flex flex-col gap-3 mb-5">
-            <div class="flex flex-col gap-1">
+            <WithError v-slot="{ invalid }" :error="v$.company.name">
                 <FloatLabel variant="in">
                     <InputText
                         fluid
                         id="companyName"
                         :disabled="editMode"
-                        :invalid="v$.company.name.$error"
+                        :invalid="invalid"
                         v-model="company.name"
                         variant="filled"
                     />
                     <label for="companyName">Name</label>
                 </FloatLabel>
-                <Message
-                    v-if="v$.company.name.$error"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                    >{{ v$.company.name.$errors[0].$message }}</Message
-                >
-            </div>
+            </WithError>
             <template v-if="editMode">
                 <span class="text-surface-500 dark:text-surface-400 block"
                     >Product Pricing</span
@@ -98,6 +91,7 @@
 
 <script>
 import CustomAutoComplete from "@/components/CustomAutoComplete.vue";
+import WithError from "@/components/WithError.vue";
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 

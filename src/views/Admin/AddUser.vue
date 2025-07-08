@@ -8,44 +8,46 @@
         <span class="text-surface-500 dark:text-surface-400 block mb-4"
             >Enter user information.</span
         >
-        <Message
-            v-for="error in errors"
-            severity="error"
-            :key="error"
-            icon="pi pi-times-circle"
-            class="mb-2"
-            >{{ error }}</Message
-        >
         <div class="flex flex-col gap-3">
-            <FloatLabel variant="in">
-                <InputText
-                    fluid
-                    id="phone"
-                    :useGrouping="false"
-                    :disabled="editMode"
-                    v-model="user.uid"
-                    variant="filled"
-                />
-                <label for="phone">Phone #</label>
-            </FloatLabel>
-            <FloatLabel variant="in">
-                <InputText
-                    fluid
-                    id="f_name"
-                    v-model="user.firstName"
-                    variant="filled"
-                />
-                <label for="f_name">First Name</label>
-            </FloatLabel>
-            <FloatLabel variant="in">
-                <InputText
-                    fluid
-                    id="l_name"
-                    v-model="user.lastName"
-                    variant="filled"
-                />
-                <label for="l_name">Last Name</label>
-            </FloatLabel>
+            <WithError v-slot="{ invalid }" :error="v$.user.uid">
+                <FloatLabel variant="in">
+                    <InputText
+                        fluid
+                        id="phone"
+                        maxlength="10"
+                        :invalid="invalid"
+                        :useGrouping="false"
+                        :disabled="editMode"
+                        v-model="user.uid"
+                        variant="filled"
+                    />
+                    <label for="phone">Phone #</label>
+                </FloatLabel>
+            </WithError>
+            <WithError v-slot="{ invalid }" :error="v$.user.firstName">
+                <FloatLabel variant="in">
+                    <InputText
+                        fluid
+                        id="f_name"
+                        :invalid="invalid"
+                        v-model="user.firstName"
+                        variant="filled"
+                    />
+                    <label for="f_name">First Name</label>
+                </FloatLabel>
+            </WithError>
+            <WithError v-slot="{ invalid }" :error="v$.user.lastName">
+                <FloatLabel variant="in">
+                    <InputText
+                        fluid
+                        id="l_name"
+                        :invalid="invalid"
+                        v-model="user.lastName"
+                        variant="filled"
+                    />
+                    <label for="l_name">Last Name</label>
+                </FloatLabel>
+            </WithError>
             <div class="flex items-center gap-2">
                 <Checkbox inputId="ingredient1" binary v-model="user.isAdmin" />
                 <label for="ingredient1"> Is Admin? </label>
@@ -78,6 +80,10 @@
 </template>
 
 <script>
+import { useVuelidate } from "@vuelidate/core";
+import { required, helpers } from "@vuelidate/validators";
+import WithError from "@/components/WithError.vue";
+
 function initialValues() {
     return JSON.parse(
         JSON.stringify({
@@ -90,6 +96,9 @@ function initialValues() {
 }
 
 export default {
+    setup() {
+        return { v$: useVuelidate() };
+    },
     props: ["modelValue", "editMode", "userToEdit"],
     computed: {
         dialog: {
@@ -106,6 +115,20 @@ export default {
             user: initialValues(),
             errors: [],
             loading: false,
+        };
+    },
+    validations() {
+        return {
+            user: {
+                uid: {
+                    phone: helpers.withMessage(
+                        "Invalid phone#",
+                        (val) => val.length === 10
+                    ),
+                },
+                firstName: { required },
+                lastName: { required },
+            },
         };
     },
     methods: {
@@ -125,8 +148,8 @@ export default {
 
             return this.errors.length === 0;
         },
-        addUser() {
-            if (!this.validate()) return;
+        async addUser() {
+            if (!(await this.v$.$validate())) return;
 
             this.loading = true;
 
@@ -138,8 +161,8 @@ export default {
                 })
                 .finally(() => (this.loading = false));
         },
-        updateUser() {
-            if (!this.validate()) return;
+        async updateUser() {
+            if (!(await this.v$.$validate())) return;
 
             this.loading = true;
 
@@ -155,6 +178,7 @@ export default {
     watch: {
         dialog(val) {
             if (!val) {
+                this.v$.$reset();
                 this.user = initialValues();
             }
 
